@@ -19,7 +19,7 @@ const Index = () => {
     toast({
       title: "Content generated successfully!",
       description: "Your high-quality article is ready for review.",
-      variant: "success"
+      variant: "default"
     });
   };
 
