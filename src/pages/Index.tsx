@@ -72,17 +72,6 @@ const Index = () => {
               <CardContent>
                 <ArticlePreview content={generatedContent} />
               </CardContent>
-              <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline">
-                  Download as PDF
-                </Button>
-                <Button variant="outline">
-                  Download as Markdown
-                </Button>
-                <Button>
-                  Copy to Clipboard
-                </Button>
-              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
