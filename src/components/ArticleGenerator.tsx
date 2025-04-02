@@ -1,15 +1,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { simulateApiCall } from "@/utils/contentGenerationUtils";
+import ResearchDataInput from "@/components/ArticleGeneratorComponents/ResearchDataInput";
+import KeywordsInput from "@/components/ArticleGeneratorComponents/KeywordsInput";
+import ArticleOptions from "@/components/ArticleGeneratorComponents/ArticleOptions";
+import ToneAndLengthControls from "@/components/ArticleGeneratorComponents/ToneAndLengthControls";
+import AdvancedOptionsPanel from "@/components/ArticleGeneratorComponents/AdvancedOptionsPanel";
 
 interface ArticleGeneratorProps {
   onContentGenerated: (content: string) => void;
@@ -55,131 +53,40 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="researchData">Research Data</Label>
-        <Textarea 
-          id="researchData" 
-          placeholder="Paste your research data, URLs, or information here..." 
-          className="min-h-[150px]" 
-          value={researchData}
-          onChange={(e) => setResearchData(e.target.value)}
+      <ResearchDataInput 
+        researchData={researchData} 
+        setResearchData={setResearchData} 
+      />
+
+      <KeywordsInput 
+        targetKeywords={targetKeywords} 
+        setTargetKeywords={setTargetKeywords} 
+      />
+
+      <ToneAndLengthControls
+        tone={tone}
+        setTone={setTone}
+        articleLength={articleLength}
+        setArticleLength={setArticleLength}
+      />
+
+      <ArticleOptions 
+        advancedOptions={advancedOptions}
+        setAdvancedOptions={setAdvancedOptions}
+        includeImages={includeImages}
+        setIncludeImages={setIncludeImages}
+        includeFAQs={includeFAQs}
+        setIncludeFAQs={setIncludeFAQs}
+      />
+      
+      {advancedOptions && (
+        <AdvancedOptionsPanel 
+          seoLevel={seoLevel}
+          setSeoLevel={setSeoLevel}
+          targetAudience={targetAudience}
+          setTargetAudience={setTargetAudience}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="keywords">Target Keywords</Label>
-        <Input
-          id="keywords"
-          placeholder="Primary keyword, secondary keyword 1, secondary keyword 2..."
-          value={targetKeywords}
-          onChange={(e) => setTargetKeywords(e.target.value)}
-        />
-        <p className="text-xs text-gray-500">Separate multiple keywords with commas. First keyword will be used as the primary focus.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="tone">Article Tone</Label>
-          <Select value={tone} onValueChange={setTone}>
-            <SelectTrigger id="tone">
-              <SelectValue placeholder="Select tone" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="informative">Informative</SelectItem>
-              <SelectItem value="conversational">Conversational</SelectItem>
-              <SelectItem value="professional">Professional</SelectItem>
-              <SelectItem value="persuasive">Persuasive</SelectItem>
-              <SelectItem value="enthusiastic">Enthusiastic</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-4">
-          <Label>Article Length (words): {articleLength}</Label>
-          <Slider
-            defaultValue={[3000]}
-            max={8000}
-            step={500}
-            min={1500}
-            onValueChange={(value) => setArticleLength(value[0])}
-          />
-          <p className="text-xs text-gray-500">
-            {articleLength < 3000 ? "Short-form content" : 
-             articleLength < 5000 ? "Medium-length content" : 
-             "Long-form content (best for SEO)"}
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="font-medium">Article Options</div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setAdvancedOptions(!advancedOptions)}
-          >
-            {advancedOptions ? "Hide Advanced Options" : "Show Advanced Options"}
-          </Button>
-        </div>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="includeImages" 
-                  checked={includeImages}
-                  onCheckedChange={setIncludeImages}
-                />
-                <Label htmlFor="includeImages">Include Image Suggestions</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="includeFAQs" 
-                  checked={includeFAQs}
-                  onCheckedChange={setIncludeFAQs}
-                />
-                <Label htmlFor="includeFAQs">Include FAQ Section</Label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {advancedOptions && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-6">
-                <div>
-                  <Label>SEO Optimization Level: {seoLevel}%</Label>
-                  <Slider
-                    defaultValue={[80]}
-                    max={100}
-                    step={5}
-                    min={50}
-                    onValueChange={(value) => setSeoLevel(value[0])}
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Higher values prioritize search engine ranking factors over natural language flow
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="targetAudience">Target Audience</Label>
-                  <Input
-                    id="targetAudience"
-                    placeholder="E.g. Beginners, professionals, Gen Z, senior executives..."
-                    value={targetAudience}
-                    onChange={(e) => setTargetAudience(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
       <div className="flex justify-end">
         <Button 
