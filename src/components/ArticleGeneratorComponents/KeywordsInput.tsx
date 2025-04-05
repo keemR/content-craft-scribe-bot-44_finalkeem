@@ -17,7 +17,10 @@ const KeywordsInput = ({ targetKeywords, setTargetKeywords }: KeywordsInputProps
         value={targetKeywords}
         onChange={(e) => setTargetKeywords(e.target.value)}
       />
-      <p className="text-xs text-gray-500">Separate multiple keywords with commas. First keyword will be used as the primary focus.</p>
+      <p className="text-xs text-gray-500">
+        Enter your main keyword first, followed by related keywords (separated by commas). 
+        Include long-tail variations for better SEO performance.
+      </p>
     </div>
   );
 };

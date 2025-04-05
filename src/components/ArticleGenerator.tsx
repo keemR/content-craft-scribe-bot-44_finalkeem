@@ -40,7 +40,9 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
         articleLength,
         tone,
         includeImages,
-        includeFAQs
+        includeFAQs,
+        seoLevel,
+        targetAudience
       });
       
       onContentGenerated(content);
@@ -95,7 +97,7 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
           className="w-full md:w-auto"
         >
           {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isGenerating ? "Generating High-Quality Article..." : "Generate Article"}
+          {isGenerating ? "Generating High-Quality Article..." : "Generate Unique SEO-Optimized Article"}
         </Button>
       </div>
     </div>

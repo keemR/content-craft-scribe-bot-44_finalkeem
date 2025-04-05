@@ -13,11 +13,15 @@ const ResearchDataInput = ({ researchData, setResearchData }: ResearchDataInputP
       <Label htmlFor="researchData">Research Data</Label>
       <Textarea 
         id="researchData" 
-        placeholder="Paste your research data, URLs, or information here..." 
+        placeholder="Paste your research data, URLs, statistics, or source information here... The more detailed the input, the more unique the output." 
         className="min-h-[150px]" 
         value={researchData}
         onChange={(e) => setResearchData(e.target.value)}
       />
+      <p className="text-xs text-gray-500">
+        For the highest quality content, include specific data points, statistics, quotes, and expert opinions. 
+        This ensures your article will be factually accurate and unique.
+      </p>
     </div>
   );
 };

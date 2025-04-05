@@ -32,6 +32,9 @@ const ToneAndLengthControls = ({
             <SelectItem value="enthusiastic">Enthusiastic</SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-gray-500">
+          "Conversational" and "Informative" tones typically perform best for SEO as they sound most natural.
+        </p>
       </div>
 
       <div className="space-y-4">
@@ -44,9 +47,9 @@ const ToneAndLengthControls = ({
           onValueChange={(value) => setArticleLength(value[0])}
         />
         <p className="text-xs text-gray-500">
-          {articleLength < 3000 ? "Short-form content" : 
-           articleLength < 5000 ? "Medium-length content" : 
-           "Long-form content (best for SEO)"}
+          {articleLength < 3000 ? "Short-form content (good for specific topics)" : 
+           articleLength < 5000 ? "Medium-length content (good balance)" : 
+           "Long-form content (2000+ words per section, optimal for comprehensive SEO)"}
         </p>
       </div>
     </div>
