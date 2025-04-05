@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search } from "lucide-react";
-import { simulateApiCall } from "@/utils/contentGenerationUtils";
+import { simulateApiCall } from "@/utils/contentGeneration";
 import ResearchDataInput from "@/components/ArticleGeneratorComponents/ResearchDataInput";
 import KeywordsInput from "@/components/ArticleGeneratorComponents/KeywordsInput";
 import ArticleOptions from "@/components/ArticleGeneratorComponents/ArticleOptions";
