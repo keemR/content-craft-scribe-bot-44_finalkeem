@@ -10,17 +10,17 @@ interface ResearchDataInputProps {
 const ResearchDataInput = ({ researchData, setResearchData }: ResearchDataInputProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="researchData">Research Data</Label>
+      <Label htmlFor="researchData">Research Data (Optional)</Label>
       <Textarea 
         id="researchData" 
-        placeholder="Paste your research data, URLs, statistics, or source information here... The more detailed the input, the more unique the output." 
+        placeholder="Paste your research data, URLs, statistics, or source information here... Or leave blank for AI to research your topic." 
         className="min-h-[150px]" 
         value={researchData}
         onChange={(e) => setResearchData(e.target.value)}
       />
       <p className="text-xs text-gray-500">
-        For the highest quality content, include specific data points, statistics, quotes, and expert opinions. 
-        This ensures your article will be factually accurate and unique.
+        Optionally provide your own research data for more personalized content.
+        If left empty, our AI will automatically research your keywords to generate unique content.
       </p>
     </div>
   );
