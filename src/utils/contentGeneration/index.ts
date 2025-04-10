@@ -69,6 +69,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
     // Generate section with varied paragraph lengths, practical examples, and topic-specific advice
+    // Fix: Pass only the expected arguments to generateSectionContent
     content += generateSectionContent(
       heading, 
       keywordsList, 
