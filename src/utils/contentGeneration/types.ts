@@ -83,3 +83,50 @@ export interface KeyPoint {
   title: string;
   description: string;
 }
+
+// New types for meal planning content
+export interface Recipe {
+  name: string;
+  ingredients: string[];
+  instructions: string;
+  prepTime: string;
+  cost: string;
+  servings: number;
+  nutritionInfo?: string;
+}
+
+export interface MealPlan {
+  day: string;
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+  snacks: string[];
+  estimatedCost: string;
+}
+
+export interface BudgetTip {
+  title: string;
+  description: string;
+  estimatedSavings: string;
+}
+
+export interface NutritionGuide {
+  category: string;
+  recommendations: string[];
+  budgetOptions: string[];
+}
+
+export interface GroceryItem {
+  name: string;
+  category: string;
+  averagePrice: string;
+  budgetAlternatives?: string[];
+  nutritionalValue: string;
+}
+
+export interface SeasonalProduce {
+  season: string;
+  fruits: string[];
+  vegetables: string[];
+  savingTips: string;
+}
