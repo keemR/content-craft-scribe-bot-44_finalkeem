@@ -1,7 +1,7 @@
 
 import { slugify } from '../helpers';
 
-export const generateHeadings = (keywords: string[], targetAudience?: string, topicCategory: string = 'general'): string[] => {
+export const generateHeadings = (keywords: string[], topicCategory: string = 'general', targetAudience?: string): string[] => {
   const primaryKeyword = keywords[0] || 'This Topic';
   
   // Topic-specific headings based on content category
@@ -108,7 +108,7 @@ function generateTechnologyHeadings(primaryKeyword: string, targetAudience?: str
   ];
 }
 
-function generateGenericHeadings(primaryKeyword: string, targetAudience?: string, keywords: string[]): string[] {
+function generateGenericHeadings(primaryKeyword: string, targetAudience?: string, keywords: string[] = []): string[] {
   // Create more specific, semantic-rich headings
   const baseHeadings = [
     `What is ${primaryKeyword}? Definition and Key Concepts`,

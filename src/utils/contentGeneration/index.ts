@@ -21,7 +21,11 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     includeFAQs,
     seoLevel = 80,
     targetAudience = '',
-    preventRepetition = true
+    preventRepetition = true,
+    contentSpecificity = 70,
+    includeExamples = true,
+    includeStatistics = true,
+    useCaseStudies = true
   } = options;
 
   // Parse keywords for better semantic richness
@@ -51,7 +55,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   
   // Table of Contents for improved UX and crawlability
   content += "## Table of Contents\n\n";
-  const headings = generateHeadings(keywordsList, targetAudience, topicCategory);
+  const headings = generateHeadings(keywordsList, topicCategory, targetAudience);
   
   // Generate Table of Contents with anchor links
   headings.forEach((heading, index) => {
