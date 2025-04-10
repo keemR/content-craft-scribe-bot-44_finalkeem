@@ -80,7 +80,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       heading, 
       keywordsList, 
       tone, 
-      sectionLength,
+      sectionLength, // This is now a number
       targetAudience,
       topicCategory
     ) + "\n\n";
