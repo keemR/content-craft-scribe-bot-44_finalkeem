@@ -1,4 +1,4 @@
-
+import React, { useState } from 'react';
 import { ContentGenerationOptions } from './types';
 import { createTitleFromKeywords, slugify } from './helpers';
 import { generateKeyTakeaways } from './generators/takeawaysGenerator';
@@ -30,6 +30,11 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     useCaseStudies = true
   } = options;
 
+  // Ensure articleLength is a number
+  const numericArticleLength = typeof articleLength === 'string' 
+    ? parseInt(articleLength, 10) 
+    : articleLength;
+
   // Parse keywords for better semantic richness
   const keywordsList = targetKeywords.split(',').map(k => k.trim());
   const primaryKeyword = keywordsList[0] || '';
@@ -45,7 +50,6 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   
   // Add estimated reading time for better user experience
   // Convert articleLength to number to ensure it's the correct type
-  const numericArticleLength = typeof articleLength === 'string' ? parseInt(articleLength, 10) : articleLength;
   const estimatedReadingTime = Math.ceil(numericArticleLength / 200); // 200 words per minute
   content += `*Reading time: ${estimatedReadingTime} minutes*\n\n`;
   
@@ -67,20 +71,18 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   });
   content += "\n\n";
   
-  // Generate main content with semantic structure
   headings.forEach((heading, index) => {
     // Create proper heading IDs for anchor links
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
     // Generate section with varied paragraph lengths, practical examples, and topic-specific advice
-    // Calculate section length as a number and pass it to the function
     const sectionLength = Math.floor(numericArticleLength / headings.length);
     
     content += generateSectionContent(
       heading, 
       keywordsList, 
       tone, 
-      sectionLength,
+      sectionLength, // Ensure this is a number
       targetAudience,
       topicCategory
     ) + "\n\n";
@@ -90,7 +92,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       content += generateTopicSpecificImage(heading, primaryKeyword, topicCategory) + "\n\n";
     }
   });
-  
+
   // Add relevant FAQs specific to the topic
   if (includeFAQs) {
     content += "## Frequently Asked Questions\n\n";
