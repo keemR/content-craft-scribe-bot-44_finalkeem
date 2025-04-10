@@ -73,7 +73,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
     // Generate section with varied paragraph lengths, practical examples, and topic-specific advice
-    // Convert articleLength to number to fix the type error
+    // Use the numericArticleLength to fix the type error
     const sectionLength = Math.floor(numericArticleLength / headings.length);
     
     content += generateSectionContent(
