@@ -44,7 +44,9 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   content += `# ${title}\n\n`;
   
   // Add estimated reading time for better user experience
-  const estimatedReadingTime = Math.ceil(articleLength / 200); // 200 words per minute
+  // Convert articleLength to number to ensure it's the correct type
+  const numericArticleLength = typeof articleLength === 'string' ? parseInt(articleLength, 10) : articleLength;
+  const estimatedReadingTime = Math.ceil(numericArticleLength / 200); // 200 words per minute
   content += `*Reading time: ${estimatedReadingTime} minutes*\n\n`;
   
   // Key Takeaways - optimized for featured snippets with specific, valuable insights
@@ -72,7 +74,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     
     // Generate section with varied paragraph lengths, practical examples, and topic-specific advice
     // Convert articleLength to number to fix the type error
-    const sectionLength = Math.floor(Number(articleLength) / headings.length);
+    const sectionLength = Math.floor(numericArticleLength / headings.length);
     
     content += generateSectionContent(
       heading, 

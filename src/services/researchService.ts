@@ -1,14 +1,13 @@
 
-import { useToast } from "@/components/ui/use-toast";
+import { Toast } from "@/components/ui/toast";
 
 export const performWebResearch = async (
   targetKeywords: string,
-  setIsResearching: (value: boolean) => void
+  setIsResearching: (value: boolean) => void,
+  showToast: (props: { title: string; description: string; variant?: "default" | "destructive" }) => void
 ): Promise<string> => {
-  const toast = useToast();
-  
   if (!targetKeywords.trim()) {
-    toast.toast({
+    showToast({
       title: "Keywords Required",
       description: "Please enter at least one keyword to guide the research.",
       variant: "destructive",
@@ -57,7 +56,7 @@ export const performWebResearch = async (
     return researchResults;
   } catch (error) {
     console.error("Error performing web research:", error);
-    toast.toast({
+    showToast({
       title: "Research Error",
       description: "An error occurred while researching your topic. Please try again.",
       variant: "destructive",
