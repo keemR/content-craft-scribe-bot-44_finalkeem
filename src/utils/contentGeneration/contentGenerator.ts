@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { ContentGenerationOptions } from './types';
 import { createTitleFromKeywords, slugify } from './helpers';
 import { generateKeyTakeaways } from './generators/takeawaysGenerator';
@@ -49,7 +50,6 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   content += `# ${title}\n\n`;
   
   // Add estimated reading time for better user experience
-  // Convert articleLength to number to ensure it's the correct type
   const estimatedReadingTime = Math.ceil(numericArticleLength / 200); // 200 words per minute
   content += `*Reading time: ${estimatedReadingTime} minutes*\n\n`;
   
@@ -76,13 +76,15 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
     // Generate section with varied paragraph lengths, practical examples, and topic-specific advice
+    // Calculate the section length as a number based on article length
     const sectionLength = Math.floor(numericArticleLength / headings.length);
     
+    // Ensure all parameters are the correct types
     content += generateSectionContent(
       heading, 
       keywordsList, 
       tone, 
-      sectionLength, // Ensure this is a number
+      sectionLength, // This is now guaranteed to be a number
       targetAudience,
       topicCategory
     ) + "\n\n";

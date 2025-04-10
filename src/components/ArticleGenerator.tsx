@@ -26,6 +26,7 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
   const [advancedOptions, setAdvancedOptions] = useState(false);
   const [seoLevel, setSeoLevel] = useState(80);
   const [targetAudience, setTargetAudience] = useState("");
+  const [contentSpecificity, setContentSpecificity] = useState(85); // Higher default for more specific content
   const [isResearching, setIsResearching] = useState(false);
   const { toast } = useToast();
 
@@ -80,7 +81,11 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
         includeImages,
         includeFAQs,
         seoLevel,
-        targetAudience
+        targetAudience,
+        contentSpecificity, // Pass the specific content level
+        includeExamples: true, // Always include examples
+        includeStatistics: true, // Always include statistics
+        useCaseStudies: true // Always use case studies
       });
       
       onContentGenerated(content);

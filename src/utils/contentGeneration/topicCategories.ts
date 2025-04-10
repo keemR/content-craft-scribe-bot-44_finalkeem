@@ -11,7 +11,10 @@ export function determineTopicCategory(primaryKeyword: string): string {
       keyword.includes('eat') || 
       keyword.includes('food') || 
       keyword.includes('nutrition') || 
-      keyword.includes('recipe')) {
+      keyword.includes('recipe') ||
+      keyword.includes('grocery') ||
+      keyword.includes('cooking') ||
+      keyword.includes('budget meal')) {
     return 'meal-planning';
   }
   
@@ -20,7 +23,10 @@ export function determineTopicCategory(primaryKeyword: string): string {
       keyword.includes('business') || 
       keyword.includes('seo') || 
       keyword.includes('sales') ||
-      keyword.includes('affiliate')) {
+      keyword.includes('affiliate') ||
+      keyword.includes('ecommerce') ||
+      keyword.includes('brand') ||
+      keyword.includes('advertising')) {
     return 'marketing';
   }
   
@@ -29,7 +35,10 @@ export function determineTopicCategory(primaryKeyword: string): string {
       keyword.includes('freelance') || 
       keyword.includes('income') || 
       keyword.includes('earn') ||
-      keyword.includes('dropshipping')) {
+      keyword.includes('dropshipping') ||
+      keyword.includes('passive income') ||
+      keyword.includes('side hustle') ||
+      keyword.includes('work from home')) {
     return 'online-income';
   }
   
@@ -38,7 +47,11 @@ export function determineTopicCategory(primaryKeyword: string): string {
       keyword.includes('software') || 
       keyword.includes('app') || 
       keyword.includes('developer') ||
-      keyword.includes('coding')) {
+      keyword.includes('coding') ||
+      keyword.includes('program') ||
+      keyword.includes('digital') ||
+      keyword.includes('ai') ||
+      keyword.includes('artificial intelligence')) {
     return 'technology';
   }
   
@@ -46,7 +59,11 @@ export function determineTopicCategory(primaryKeyword: string): string {
   if (keyword.includes('health') || 
       keyword.includes('fitness') || 
       keyword.includes('exercise') || 
-      keyword.includes('wellness')) {
+      keyword.includes('wellness') ||
+      keyword.includes('workout') ||
+      keyword.includes('diet') ||
+      keyword.includes('nutrition') ||
+      keyword.includes('weight loss')) {
     return 'health-fitness';
   }
   
