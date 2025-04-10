@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { simulateApiCall } from "@/utils/contentGeneration";
 import ResearchDataInput from "@/components/ArticleGeneratorComponents/ResearchDataInput";
 import KeywordsInput from "@/components/ArticleGeneratorComponents/KeywordsInput";
@@ -51,7 +51,11 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
           description: "No research data provided. Conducting web research on your keywords...",
         });
         
-        const webResearchData = await performWebResearch(targetKeywords, setIsResearching);
+        const webResearchData = await performWebResearch(
+          targetKeywords, 
+          setIsResearching,
+          (props) => toast(props)
+        );
         finalResearchData = webResearchData;
       } else {
         // If user provided data, still augment it with additional research
@@ -60,7 +64,11 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
           description: "Supplementing your research with additional information...",
         });
         
-        const supplementalData = await performWebResearch(targetKeywords, setIsResearching);
+        const supplementalData = await performWebResearch(
+          targetKeywords,
+          setIsResearching,
+          (props) => toast(props)
+        );
         finalResearchData = `${researchData}\n\nADDITIONAL RESEARCH:\n${supplementalData}`;
       }
       
@@ -91,6 +99,10 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleResearchComplete = (data: string) => {
+    setResearchData(data);
   };
 
   return (
@@ -134,6 +146,7 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
         targetKeywords={targetKeywords}
         isGenerating={isGenerating}
         handleGenerateContent={generateContent}
+        onResearchComplete={handleResearchComplete}
       />
     </div>
   );
