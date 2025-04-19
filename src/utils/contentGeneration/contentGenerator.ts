@@ -85,8 +85,8 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       keywordsList, 
       tone, 
       sectionLength, // This is now guaranteed to be a number
-      targetAudience,
-      topicCategory
+      typeof targetAudience === 'string' ? targetAudience : '',
+      typeof topicCategory === 'string' ? topicCategory : 'general'
     ) + "\n\n";
     
     // Add relevant images with proper alt text
