@@ -78,14 +78,14 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
     // Create proper heading IDs for anchor links
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
-    // Ensure all parameters are the correct types
+    // Generate section content with proper argument types
     content += generateSectionContent(
       heading, 
       keywordsList, 
       tone, 
-      sectionLength, // This is now defined and guaranteed to be a number
-      targetAudience || '', // Provide empty string if undefined
-      topicCategory || 'general' // Provide 'general' if undefined
+      sectionLength, 
+      targetAudience, 
+      topicCategory
     ) + "\n\n";
     
     // Add relevant images with proper alt text
