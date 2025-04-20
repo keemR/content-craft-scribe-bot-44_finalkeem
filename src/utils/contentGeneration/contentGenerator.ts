@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ContentGenerationOptions } from './types';
 import { createTitleFromKeywords, slugify } from './helpers';
@@ -70,6 +71,9 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   });
   content += "\n\n";
   
+  // Calculate the section length as a number based on article length and number of headings
+  const sectionLength = Math.floor(numericArticleLength / headings.length);
+  
   headings.forEach((heading, index) => {
     // Create proper heading IDs for anchor links
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
@@ -79,7 +83,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       heading, 
       keywordsList, 
       tone, 
-      sectionLength, // This is now guaranteed to be a number
+      sectionLength, // This is now defined and guaranteed to be a number
       targetAudience || '', // Provide empty string if undefined
       topicCategory || 'general' // Provide 'general' if undefined
     ) + "\n\n";
