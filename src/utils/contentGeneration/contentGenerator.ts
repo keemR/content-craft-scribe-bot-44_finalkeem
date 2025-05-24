@@ -9,7 +9,7 @@ import { generateSectionContent } from './generators/sectionGenerator';
 import { generateFAQs } from './generators/faqGenerator';
 import { generateConclusion } from './generators/conclusionGenerator';
 import { determineTopicCategory } from './topicCategories';
-import { generateTopicSpecificImage } from './generators/imageGenerator';
+import { generateVisualContent, formatVisualContentForMarkdown } from './generators/visualContentGenerator';
 
 /**
  * Generates high-quality SEO-optimized content based on user inputs
@@ -88,9 +88,11 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       topicCategory
     ) + "\n\n";
     
-    // Add relevant images with proper alt text
-    if (includeImages && index % 2 === 0) {
-      content += generateTopicSpecificImage(heading, primaryKeyword, topicCategory) + "\n\n";
+    // Add comprehensive visual content for each section
+    if (includeImages) {
+      const visuals = generateVisualContent(heading, primaryKeyword, topicCategory, index);
+      const visualMarkdown = formatVisualContentForMarkdown(visuals);
+      content += visualMarkdown + "\n\n";
     }
   });
 

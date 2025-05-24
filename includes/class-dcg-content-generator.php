@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Content generator class for creating high-quality SEO content.
@@ -127,7 +126,7 @@ class DCG_Content_Generator {
         }
         $content .= "\n\n";
         
-        // Section content
+        // Section content with enhanced visuals
         $sectionLength = floor($numericArticleLength / count($headings));
         
         foreach ($headings as $index => $heading) {
@@ -144,10 +143,11 @@ class DCG_Content_Generator {
             );
             $content .= "\n\n";
             
-            // Add image suggestion for every other section
-            if ($options['includeImages'] && $index % 2 === 0) {
-                $content .= $this->generate_image_suggestion($heading, $primaryKeyword, $topicCategory);
-                $content .= "\n\n";
+            // Add comprehensive visual content for each section
+            if ($options['includeImages']) {
+                $visuals = $this->generate_visual_content($heading, $primaryKeyword, $topicCategory, $index);
+                $visual_markdown = $this->format_visual_content_for_markdown($visuals);
+                $content .= $visual_markdown . "\n\n";
             }
         }
         
@@ -748,5 +748,229 @@ class DCG_Content_Generator {
         $text = trim($text, '-');
         
         return $text;
+    }
+    
+    /**
+     * Generate visual content suggestions for a section.
+     * 
+     * @param string $heading Section heading.
+     * @param string $primaryKeyword Primary keyword.
+     * @param string $topicCategory Topic category.
+     * @param int $sectionIndex Section index.
+     * @return array Visual content suggestions.
+     */
+    private function generate_visual_content($heading, $primaryKeyword, $topicCategory, $sectionIndex) {
+        $visuals = array();
+        $slug = $this->slugify($heading);
+        
+        // Main section image
+        $visuals[] = $this->generate_main_section_image($heading, $primaryKeyword, $topicCategory, $slug);
+        
+        // Add infographics for specific section types
+        if ($this->should_include_infographic($heading, $topicCategory)) {
+            $visuals[] = $this->generate_infographic($heading, $primaryKeyword, $topicCategory, $slug);
+        }
+        
+        // Add charts for data-heavy sections
+        if ($this->should_include_chart($heading, $topicCategory)) {
+            $visuals[] = $this->generate_chart($heading, $primaryKeyword, $topicCategory, $slug);
+        }
+        
+        // Add process diagrams for how-to sections
+        if ($this->should_include_diagram($heading)) {
+            $visuals[] = $this->generate_diagram($heading, $primaryKeyword, $slug);
+        }
+        
+        return $visuals;
+    }
+    
+    /**
+     * Generate main section image.
+     */
+    private function generate_main_section_image($heading, $primaryKeyword, $topicCategory, $slug) {
+        $image_description = '';
+        $caption = '';
+        
+        if ($topicCategory === 'meal-planning') {
+            if (stripos($heading, 'plan') !== false) {
+                $image_description = 'Weekly meal prep containers with colorful, budget-friendly ingredients organized by day';
+                $caption = 'A sample weekly meal prep showing affordable, nutritious foods organized for easy portion control';
+            } elseif (stripos($heading, 'budget') !== false || stripos($heading, 'shopping') !== false) {
+                $image_description = 'Grocery cart with fresh produce and healthy foods, price tags visible';
+                $caption = 'Smart grocery shopping with budget-friendly healthy foods';
+            } elseif (stripos($heading, 'recipe') !== false) {
+                $image_description = 'Delicious, colorful healthy meal being prepared in a clean kitchen';
+                $caption = "Preparing nutritious $primaryKeyword with simple, affordable ingredients";
+            } else {
+                $image_description = "Healthy meal components related to " . strtolower($heading);
+                $caption = "Visual guide to " . strtolower($heading) . " for better nutrition";
+            }
+        } elseif ($topicCategory === 'health-fitness') {
+            if (stripos($heading, 'exercise') !== false || stripos($heading, 'workout') !== false) {
+                $image_description = 'Person demonstrating proper exercise form in a clean, motivating environment';
+                $caption = "Proper technique demonstration for " . strtolower($heading);
+            } elseif (stripos($heading, 'equipment') !== false) {
+                $image_description = 'Essential fitness equipment arranged aesthetically';
+                $caption = "Recommended equipment for $primaryKeyword training";
+            } else {
+                $image_description = "Health and fitness concept related to " . strtolower($heading);
+                $caption = "Visual representation of " . strtolower($heading) . " principles";
+            }
+        } elseif ($topicCategory === 'marketing') {
+            $image_description = "Professional marketing strategy visualization showing " . strtolower($heading) . " concepts";
+            $caption = "Strategic approach to $primaryKeyword implementation";
+        } elseif ($topicCategory === 'online-income') {
+            $image_description = "Clean workspace setup showing $primaryKeyword workflow and tools";
+            $caption = "Professional setup for successful $primaryKeyword implementation";
+        } else {
+            $image_description = "Professional illustration of " . strtolower($heading) . " concepts";
+            $caption = "Visual representation of " . strtolower($heading);
+        }
+        
+        return array(
+            'type' => 'image',
+            'url' => "https://images.unsplash.com/$slug-main.jpg",
+            'alt_text' => $image_description,
+            'caption' => $caption,
+            'placement' => 'inline'
+        );
+    }
+    
+    /**
+     * Generate infographic suggestion.
+     */
+    private function generate_infographic($heading, $primaryKeyword, $topicCategory, $slug) {
+        if ($topicCategory === 'meal-planning') {
+            $description = "Infographic showing key statistics and tips for " . strtolower($heading);
+            $caption = "Key facts and actionable tips for " . strtolower($heading) . " - save money while eating healthy";
+        } elseif ($topicCategory === 'health-fitness') {
+            $description = "Health infographic with statistics and benefits of " . strtolower($heading);
+            $caption = "Research-backed benefits and implementation guide for " . strtolower($heading);
+        } elseif ($topicCategory === 'marketing') {
+            $description = "Marketing strategy infographic showing $primaryKeyword process flow";
+            $caption = "Step-by-step guide to implementing $primaryKeyword strategies effectively";
+        } elseif ($topicCategory === 'online-income') {
+            $description = "Income strategy infographic showing potential earnings and methods for $primaryKeyword";
+            $caption = "Realistic earning potential and proven methods for $primaryKeyword";
+        } else {
+            $description = "Comprehensive infographic about " . strtolower($heading);
+            $caption = "Essential information and actionable insights about " . strtolower($heading);
+        }
+        
+        return array(
+            'type' => 'infographic',
+            'url' => "https://infographics.example.com/$slug-infographic.jpg",
+            'alt_text' => $description,
+            'caption' => $caption,
+            'placement' => 'featured'
+        );
+    }
+    
+    /**
+     * Generate chart suggestion.
+     */
+    private function generate_chart($heading, $primaryKeyword, $topicCategory, $slug) {
+        if ($topicCategory === 'meal-planning') {
+            $description = "Cost comparison chart showing price differences for " . strtolower($heading);
+            $caption = "Cost analysis comparing different approaches to " . strtolower($heading);
+        } elseif ($topicCategory === 'health-fitness') {
+            $description = "Progress tracking chart showing $primaryKeyword improvement over time";
+            $caption = "Typical progress timeline for $primaryKeyword implementation";
+        } elseif ($topicCategory === 'marketing') {
+            $description = "Performance metrics chart for $primaryKeyword campaigns";
+            $caption = "Key performance indicators and benchmarks for $primaryKeyword";
+        } elseif ($topicCategory === 'online-income') {
+            $description = "Earnings potential chart showing income progression with $primaryKeyword";
+            $caption = "Income growth timeline and earning potential with $primaryKeyword";
+        } else {
+            $description = "Data visualization chart for " . strtolower($heading);
+            $caption = "Key metrics and data insights for " . strtolower($heading);
+        }
+        
+        return array(
+            'type' => 'chart',
+            'url' => "https://charts.example.com/$slug-chart.png",
+            'alt_text' => $description,
+            'caption' => $caption,
+            'placement' => 'inline'
+        );
+    }
+    
+    /**
+     * Generate diagram suggestion.
+     */
+    private function generate_diagram($heading, $primaryKeyword, $slug) {
+        return array(
+            'type' => 'diagram',
+            'url' => "https://diagrams.example.com/$slug-process.jpg",
+            'alt_text' => "Step-by-step process diagram for " . strtolower($heading),
+            'caption' => "Clear visual guide to implementing " . strtolower($heading) . " successfully",
+            'placement' => 'inline'
+        );
+    }
+    
+    /**
+     * Check if section should include infographic.
+     */
+    private function should_include_infographic($heading, $topicCategory) {
+        $info_keywords = array('guide', 'tips', 'benefits', 'comparison', 'overview', 'basics');
+        
+        foreach ($info_keywords as $keyword) {
+            if (stripos($heading, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        return $topicCategory === 'meal-planning'; // Always include for meal planning
+    }
+    
+    /**
+     * Check if section should include chart.
+     */
+    private function should_include_chart($heading, $topicCategory) {
+        $chart_keywords = array('cost', 'budget', 'comparison', 'analysis', 'results', 'metrics', 'tracking');
+        
+        foreach ($chart_keywords as $keyword) {
+            if (stripos($heading, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if section should include diagram.
+     */
+    private function should_include_diagram($heading) {
+        $diagram_keywords = array('how to', 'process', 'steps', 'implementation', 'guide', 'strategy');
+        
+        foreach ($diagram_keywords as $keyword) {
+            if (stripos($heading, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Format visual content for markdown output.
+     */
+    private function format_visual_content_for_markdown($visuals) {
+        $markdown = '';
+        
+        foreach ($visuals as $visual) {
+            $markdown .= "![{$visual['alt_text']}]({$visual['url']})\n";
+            $markdown .= "*{$visual['caption']}*";
+            
+            if ($visual['type'] === 'infographic') {
+                $markdown .= "\n\n> 💡 **Pro Tip:** Save this infographic for quick reference or share it with others who might benefit from this information.";
+            }
+            
+            $markdown .= "\n\n";
+        }
+        
+        return $markdown;
     }
 }
