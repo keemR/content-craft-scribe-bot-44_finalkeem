@@ -1,4 +1,3 @@
-
 import { slugify } from '../helpers';
 
 export interface VisualContent {
@@ -22,21 +21,21 @@ export function generateVisualContent(
   const slug = slugify(heading);
   
   // Always include a main image for the section
-  visuals.push(generateMainSectionImage(heading, primaryKeyword, topicCategory, slug));
+  visuals.push(generateMainSectionImage(heading, primaryKeyword, topicCategory, slug, sectionIndex));
   
   // Add infographics for specific section types
   if (shouldIncludeInfographic(heading, topicCategory)) {
-    visuals.push(generateInfographic(heading, primaryKeyword, topicCategory, slug));
+    visuals.push(generateInfographic(heading, primaryKeyword, topicCategory, slug, sectionIndex));
   }
   
   // Add charts/diagrams for data-heavy sections
   if (shouldIncludeChart(heading, topicCategory)) {
-    visuals.push(generateChart(heading, primaryKeyword, topicCategory, slug));
+    visuals.push(generateChart(heading, primaryKeyword, topicCategory, slug, sectionIndex));
   }
   
   // Add process diagrams for how-to sections
   if (shouldIncludeDiagram(heading)) {
-    visuals.push(generateDiagram(heading, primaryKeyword, slug));
+    visuals.push(generateDiagram(heading, primaryKeyword, slug, sectionIndex));
   }
   
   return visuals;
@@ -46,81 +45,193 @@ function generateMainSectionImage(
   heading: string, 
   primaryKeyword: string, 
   topicCategory: string, 
-  slug: string
+  slug: string,
+  sectionIndex: number
 ): VisualContent {
   let imageUrl = '';
   let imageDescription = '';
   let caption = '';
   
   if (topicCategory === 'meal-planning') {
-    if (heading.toLowerCase().includes('plan')) {
-      imageUrl = 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=80';
-      imageDescription = 'Weekly meal prep containers with colorful, budget-friendly ingredients organized by day';
-      caption = 'A sample weekly meal prep showing affordable, nutritious foods organized for easy portion control';
-    } else if (heading.toLowerCase().includes('budget') || heading.toLowerCase().includes('shopping')) {
-      imageUrl = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80';
-      imageDescription = 'Grocery cart with fresh produce and healthy foods, price tags visible';
-      caption = 'Smart grocery shopping with budget-friendly healthy foods';
-    } else if (heading.toLowerCase().includes('recipe')) {
-      imageUrl = 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80';
-      imageDescription = 'Delicious, colorful healthy meal being prepared in a clean kitchen';
-      caption = `Preparing nutritious ${primaryKeyword} with simple, affordable ingredients`;
-    } else {
-      imageUrl = 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80';
-      imageDescription = `Healthy meal components related to ${heading.toLowerCase()}`;
-      caption = `Visual guide to ${heading.toLowerCase()} for better nutrition`;
-    }
+    const mealPlanningImages = [
+      {
+        url: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=80',
+        description: 'Weekly meal prep containers with colorful, budget-friendly ingredients organized by day',
+        caption: 'A sample weekly meal prep showing affordable, nutritious foods organized for easy portion control'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+        description: 'Grocery cart with fresh produce and healthy foods, price tags visible',
+        caption: 'Smart grocery shopping with budget-friendly healthy foods'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',
+        description: 'Delicious, colorful healthy meal being prepared in a clean kitchen',
+        caption: `Preparing nutritious ${primaryKeyword} with simple, affordable ingredients`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
+        description: 'Healthy meal components and ingredients arranged aesthetically',
+        caption: `Visual guide to ${heading.toLowerCase()} for better nutrition`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80',
+        description: 'Fresh vegetables and healthy ingredients on kitchen counter',
+        caption: 'Nutritious ingredients for budget-conscious meal planning'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+        description: 'Healthy salad with fresh vegetables and proteins',
+        caption: 'Balanced nutrition with affordable, wholesome ingredients'
+      }
+    ];
+    
+    const selected = mealPlanningImages[sectionIndex % mealPlanningImages.length];
+    imageUrl = selected.url;
+    imageDescription = selected.description;
+    caption = selected.caption;
+    
   } else if (topicCategory === 'health-fitness') {
-    if (heading.toLowerCase().includes('exercise') || heading.toLowerCase().includes('workout')) {
-      imageUrl = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80';
-      imageDescription = 'Person demonstrating proper exercise form in a clean, motivating environment';
-      caption = `Proper technique demonstration for ${heading.toLowerCase()}`;
-    } else if (heading.toLowerCase().includes('equipment')) {
-      imageUrl = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80';
-      imageDescription = 'Essential fitness equipment arranged aesthetically';
-      caption = `Recommended equipment for ${primaryKeyword} training`;
-    } else {
-      imageUrl = 'https://images.unsplash.com/photo-1506629905607-24be3db9b316?w=800&q=80';
-      imageDescription = `Health and fitness concept related to ${heading.toLowerCase()}`;
-      caption = `Visual representation of ${heading.toLowerCase()} principles`;
-    }
+    const fitnessImages = [
+      {
+        url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
+        description: 'Person demonstrating proper exercise form in a clean, motivating environment',
+        caption: `Proper technique demonstration for ${heading.toLowerCase()}`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
+        description: 'Essential fitness equipment arranged aesthetically',
+        caption: `Recommended equipment for ${primaryKeyword} training`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1506629905607-24be3db9b316?w=800&q=80',
+        description: 'Fitness and wellness lifestyle concept',
+        caption: `Visual representation of ${heading.toLowerCase()} principles`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
+        description: 'Active lifestyle and fitness motivation',
+        caption: 'Inspiring fitness and health transformation journey'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
+        description: 'Group fitness and community wellness',
+        caption: 'Building healthy habits through community and consistency'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80',
+        description: 'Fitness progress tracking and goal setting',
+        caption: 'Measuring progress and achieving fitness milestones'
+      }
+    ];
+    
+    const selected = fitnessImages[sectionIndex % fitnessImages.length];
+    imageUrl = selected.url;
+    imageDescription = selected.description;
+    caption = selected.caption;
+    
   } else if (topicCategory === 'marketing') {
-    if (heading.toLowerCase().includes('strategy')) {
-      imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80';
-      imageDescription = `Professional marketing strategy visualization showing ${heading.toLowerCase()} concepts`;
-      caption = `Strategic approach to ${primaryKeyword} implementation`;
-    } else if (heading.toLowerCase().includes('social')) {
-      imageUrl = 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&q=80';
-      imageDescription = `Social media marketing dashboard and analytics`;
-      caption = `Social media strategy implementation for ${primaryKeyword}`;
-    } else {
-      imageUrl = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80';
-      imageDescription = `Professional marketing strategy visualization showing ${heading.toLowerCase()} concepts`;
-      caption = `Strategic approach to ${primaryKeyword} implementation`;
-    }
+    const marketingImages = [
+      {
+        url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+        description: 'Professional marketing strategy visualization and planning',
+        caption: `Strategic approach to ${primaryKeyword} implementation`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&q=80',
+        description: 'Social media marketing dashboard and analytics',
+        caption: `Social media strategy implementation for ${primaryKeyword}`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+        description: 'Business meeting and marketing collaboration',
+        caption: 'Collaborative marketing strategy development'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+        description: 'Digital marketing tools and analytics dashboard',
+        caption: 'Data-driven marketing insights and optimization'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1553484771-371a605b060b?w=800&q=80',
+        description: 'Content creation and marketing planning workspace',
+        caption: 'Professional content marketing workflow and planning'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=800&q=80',
+        description: 'Marketing campaign analysis and performance metrics',
+        caption: 'Measuring marketing effectiveness and ROI'
+      }
+    ];
+    
+    const selected = marketingImages[sectionIndex % marketingImages.length];
+    imageUrl = selected.url;
+    imageDescription = selected.description;
+    caption = selected.caption;
+    
   } else if (topicCategory === 'online-income') {
-    if (heading.toLowerCase().includes('freelance')) {
-      imageUrl = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80';
-      imageDescription = `Clean workspace setup showing ${primaryKeyword} workflow and tools`;
-      caption = `Professional freelance setup for successful ${primaryKeyword} implementation`;
-    } else if (heading.toLowerCase().includes('business') || heading.toLowerCase().includes('startup')) {
-      imageUrl = 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=80';
-      imageDescription = `Entrepreneur working on laptop with business planning materials`;
-      caption = `Building a successful online business with ${primaryKeyword}`;
-    } else if (heading.toLowerCase().includes('passive')) {
-      imageUrl = 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80';
-      imageDescription = `Person working remotely on laptop showing passive income streams`;
-      caption = `Creating passive income through ${primaryKeyword} strategies`;
-    } else {
-      imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80';
-      imageDescription = `Clean workspace setup showing ${primaryKeyword} workflow and tools`;
-      caption = `Professional setup for successful ${primaryKeyword} implementation`;
-    }
+    const onlineIncomeImages = [
+      {
+        url: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80',
+        description: 'Clean workspace setup for online business and remote work',
+        caption: `Professional freelance setup for successful ${primaryKeyword} implementation`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=80',
+        description: 'Entrepreneur working on laptop with business planning materials',
+        caption: `Building a successful online business with ${primaryKeyword}`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
+        description: 'Person working remotely showing passive income streams',
+        caption: `Creating passive income through ${primaryKeyword} strategies`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=80',
+        description: 'Online business growth and digital entrepreneurship',
+        caption: 'Scaling online income through strategic planning'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80',
+        description: 'Financial planning and online income tracking',
+        caption: 'Managing and growing online revenue streams'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=800&q=80',
+        description: 'Digital nomad lifestyle and location independence',
+        caption: 'Achieving financial freedom through online income'
+      }
+    ];
+    
+    const selected = onlineIncomeImages[sectionIndex % onlineIncomeImages.length];
+    imageUrl = selected.url;
+    imageDescription = selected.description;
+    caption = selected.caption;
+    
   } else {
     // Default fallback images for other categories
-    imageUrl = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80';
-    imageDescription = `Professional illustration of ${heading.toLowerCase()} concepts`;
-    caption = `Visual representation of ${heading.toLowerCase()}`;
+    const genericImages = [
+      {
+        url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+        description: `Professional illustration of ${heading.toLowerCase()} concepts`,
+        caption: `Visual representation of ${heading.toLowerCase()}`
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+        description: 'Professional workspace and planning environment',
+        caption: 'Strategic approach to implementation and planning'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+        description: 'Business planning and strategy development',
+        caption: 'Comprehensive approach to achieving success'
+      }
+    ];
+    
+    const selected = genericImages[sectionIndex % genericImages.length];
+    imageUrl = selected.url;
+    imageDescription = selected.description;
+    caption = selected.caption;
   }
   
   return {
@@ -136,30 +247,56 @@ function generateInfographic(
   heading: string, 
   primaryKeyword: string, 
   topicCategory: string, 
-  slug: string
+  slug: string,
+  sectionIndex: number
 ): VisualContent {
   let url = '';
   let description = '';
   let caption = '';
   
   if (topicCategory === 'meal-planning') {
-    url = 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80';
+    const infographicImages = [
+      'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80',
+      'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+      'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80'
+    ];
+    url = infographicImages[sectionIndex % infographicImages.length];
     description = `Infographic showing key statistics and tips for ${heading.toLowerCase()}`;
     caption = `Key facts and actionable tips for ${heading.toLowerCase()} - save money while eating healthy`;
   } else if (topicCategory === 'health-fitness') {
-    url = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80';
+    const infographicImages = [
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',
+      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80'
+    ];
+    url = infographicImages[sectionIndex % infographicImages.length];
     description = `Health infographic with statistics and benefits of ${heading.toLowerCase()}`;
     caption = `Research-backed benefits and implementation guide for ${heading.toLowerCase()}`;
   } else if (topicCategory === 'marketing') {
-    url = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80';
+    const infographicImages = [
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+      'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80'
+    ];
+    url = infographicImages[sectionIndex % infographicImages.length];
     description = `Marketing strategy infographic showing ${primaryKeyword} process flow`;
     caption = `Step-by-step guide to implementing ${primaryKeyword} strategies effectively`;
   } else if (topicCategory === 'online-income') {
-    url = 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80';
+    const infographicImages = [
+      'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80',
+      'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80',
+      'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=80'
+    ];
+    url = infographicImages[sectionIndex % infographicImages.length];
     description = `Income strategy infographic showing potential earnings and methods for ${primaryKeyword}`;
     caption = `Realistic earning potential and proven methods for ${primaryKeyword}`;
   } else {
-    url = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80';
+    const infographicImages = [
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'
+    ];
+    url = infographicImages[sectionIndex % infographicImages.length];
     description = `Comprehensive infographic about ${heading.toLowerCase()}`;
     caption = `Essential information and actionable insights about ${heading.toLowerCase()}`;
   }
@@ -177,30 +314,56 @@ function generateChart(
   heading: string, 
   primaryKeyword: string, 
   topicCategory: string, 
-  slug: string
+  slug: string,
+  sectionIndex: number
 ): VisualContent {
   let url = '';
   let description = '';
   let caption = '';
   
   if (topicCategory === 'meal-planning') {
-    url = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80';
+    const chartImages = [
+      'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80',
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+      'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80'
+    ];
+    url = chartImages[sectionIndex % chartImages.length];
     description = `Cost comparison chart showing price differences for ${heading.toLowerCase()}`;
     caption = `Cost analysis comparing different approaches to ${heading.toLowerCase()}`;
   } else if (topicCategory === 'health-fitness') {
-    url = 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80';
+    const chartImages = [
+      'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80',
+      'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80',
+      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80'
+    ];
+    url = chartImages[sectionIndex % chartImages.length];
     description = `Progress tracking chart showing ${primaryKeyword} improvement over time`;
     caption = `Typical progress timeline for ${primaryKeyword} implementation`;
   } else if (topicCategory === 'marketing') {
-    url = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80';
+    const chartImages = [
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+      'https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=800&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'
+    ];
+    url = chartImages[sectionIndex % chartImages.length];
     description = `Performance metrics chart for ${primaryKeyword} campaigns`;
     caption = `Key performance indicators and benchmarks for ${primaryKeyword}`;
   } else if (topicCategory === 'online-income') {
-    url = 'https://images.unsplash.com/photo-1554224154-26032fced8bd?w=800&q=80';
+    const chartImages = [
+      'https://images.unsplash.com/photo-1554224154-26032fced8bd?w=800&q=80',
+      'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80',
+      'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=80'
+    ];
+    url = chartImages[sectionIndex % chartImages.length];
     description = `Earnings potential chart showing income progression with ${primaryKeyword}`;
     caption = `Income growth timeline and earning potential with ${primaryKeyword}`;
   } else {
-    url = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80';
+    const chartImages = [
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'
+    ];
+    url = chartImages[sectionIndex % chartImages.length];
     description = `Data visualization chart for ${heading.toLowerCase()}`;
     caption = `Key metrics and data insights for ${heading.toLowerCase()}`;
   }
@@ -214,10 +377,17 @@ function generateChart(
   };
 }
 
-function generateDiagram(heading: string, primaryKeyword: string, slug: string): VisualContent {
+function generateDiagram(heading: string, primaryKeyword: string, slug: string, sectionIndex: number): VisualContent {
+  const diagramImages = [
+    'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=80',
+    'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+    'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'
+  ];
+  
   return {
     type: 'diagram',
-    url: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=80',
+    url: diagramImages[sectionIndex % diagramImages.length],
     altText: `Step-by-step process diagram for ${heading.toLowerCase()}`,
     caption: `Clear visual guide to implementing ${heading.toLowerCase()} successfully`,
     placement: 'inline'
