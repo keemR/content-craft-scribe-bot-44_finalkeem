@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Copy, Download, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
+import InteractiveChart from "./InteractiveChart";
 
 interface ArticlePreviewProps {
   content: string;
@@ -48,7 +48,6 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
       variant: "default"
     });
     
-    // In a real app, this would call a PDF generation service
     setTimeout(() => {
       toast({
         title: "PDF generated",
@@ -58,20 +57,53 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
     }, 2000);
   };
   
+  // Custom renderer for interactive charts
+  const renderers = {
+    html: (props: any) => {
+      const htmlContent = props.children;
+      
+      // Check if this is an InteractiveChart component
+      const chartMatch = htmlContent.match(/<InteractiveChart type="([^"]+)"(?:\s+title="([^"]*)")?(?:\s+data=\{([^}]+)\})?\s*\/>/);
+      
+      if (chartMatch) {
+        const [, type, title, dataStr] = chartMatch;
+        let data;
+        try {
+          data = dataStr ? JSON.parse(dataStr) : undefined;
+        } catch (e) {
+          data = undefined;
+        }
+        
+        return (
+          <div className="my-6">
+            <InteractiveChart 
+              type={type as any} 
+              title={title} 
+              data={data} 
+            />
+          </div>
+        );
+      }
+      
+      // For other HTML, render as-is
+      return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+    }
+  };
+  
   // Render a message if no content is available
   if (!content) {
     return (
       <div className="text-center p-10 border rounded-md bg-gray-50">
         <p className="text-gray-500 mb-4">No content generated yet</p>
         <p className="text-sm text-gray-400">
-          Use the "Create Content" tab to generate a high-quality article
+          Use the "Create Content" tab to generate a high-quality article with interactive charts
         </p>
       </div>
     );
   }
   
   const wordCount = content.split(/\s+/).length;
-  const readingTime = Math.ceil(wordCount / 200); // Assuming 200 words per minute reading speed
+  const readingTime = Math.ceil(wordCount / 200);
   
   return (
     <div className="space-y-4">
@@ -94,7 +126,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
       <div className="border rounded-lg overflow-hidden bg-white">
         {viewMode === "preview" && (
           <div className="prose prose-blue max-w-none p-6 overflow-auto">
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown components={renderers}>{content}</ReactMarkdown>
           </div>
         )}
         
@@ -106,7 +138,6 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         
         {viewMode === "html" && (
           <pre className="whitespace-pre-wrap text-sm font-mono bg-gray-50 p-6 overflow-auto max-h-[600px]">
-            {/* Convert markdown to HTML for display */}
             {content.replace(/^# (.*?)$/gm, '<h1>$1</h1>')
               .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
               .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
