@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ContentGenerationOptions } from './types';
 import { createTitleFromKeywords, slugify } from './helpers';
@@ -9,12 +8,15 @@ import { generateSectionContent } from './generators/sectionGenerator';
 import { generateFAQs } from './generators/faqGenerator';
 import { generateConclusion } from './generators/conclusionGenerator';
 import { determineTopicCategory } from './topicCategories';
-import { generateVisualContent, formatVisualContentForMarkdown } from './generators/visualContentGenerator';
+import { generateVisualContent, formatVisualContentForMarkdown, resetUsedImages } from './generators/visualContentGenerator';
 
 /**
  * Generates high-quality SEO-optimized content based on user inputs
  */
 export const generateSEOContent = (options: ContentGenerationOptions): string => {
+  // Reset image tracking for new content generation
+  resetUsedImages();
+  
   const { 
     researchData, 
     targetKeywords, 
@@ -88,7 +90,7 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       topicCategory
     ) + "\n\n";
     
-    // Add comprehensive visual content for each section
+    // Add comprehensive visual content for each section with no duplicates
     if (includeImages) {
       const visuals = generateVisualContent(heading, primaryKeyword, topicCategory, index);
       const visualMarkdown = formatVisualContentForMarkdown(visuals);
