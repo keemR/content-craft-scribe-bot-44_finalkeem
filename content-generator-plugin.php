@@ -28,6 +28,7 @@ require_once DCG_PLUGIN_DIR . 'includes/class-dcg-website-analyzer.php';
 require_once DCG_PLUGIN_DIR . 'includes/class-dcg-content-planner.php';
 require_once DCG_PLUGIN_DIR . 'includes/class-dcg-content-generator.php';
 require_once DCG_PLUGIN_DIR . 'includes/class-dcg-csv-importer.php';
+require_once DCG_PLUGIN_DIR . 'includes/class-dcg-content-generator-api.php';
 
 /**
  * The main plugin class
@@ -84,6 +85,13 @@ class Doorillio_Content_Generator {
     private $importer;
 
     /**
+     * Content Generator API
+     *
+     * @var DCG_Content_Generator_API
+     */
+    private $api;
+
+    /**
      * Get plugin instance.
      *
      * @return Doorillio_Content_Generator
@@ -113,6 +121,7 @@ class Doorillio_Content_Generator {
         $this->planner = new DCG_Content_Planner();
         $this->generator = new DCG_Content_Generator();
         $this->importer = new DCG_CSV_Importer();
+        $this->api = new DCG_Content_Generator_API();
     }
 
     /**
@@ -122,7 +131,66 @@ class Doorillio_Content_Generator {
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         
+        add_action('init', array($this, 'init'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        
         $this->loader->run();
+    }
+
+    /**
+     * Initialize plugin.
+     */
+    public function init() {
+        // Load text domain for translations
+        load_plugin_textdomain('doorillio-content-generator', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    }
+
+    /**
+     * Enqueue admin scripts and styles.
+     */
+    public function enqueue_admin_scripts($hook) {
+        // Only load on our plugin pages
+        if (strpos($hook, 'doorillio-content') === false) {
+            return;
+        }
+
+        // Enqueue styles
+        wp_enqueue_style(
+            'dcg-admin-css',
+            DCG_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            DCG_VERSION
+        );
+
+        wp_enqueue_style(
+            'dcg-content-generator-css',
+            DCG_PLUGIN_URL . 'assets/css/content-generator.css',
+            array(),
+            DCG_VERSION
+        );
+
+        // Enqueue scripts
+        wp_enqueue_script(
+            'dcg-admin-js',
+            DCG_PLUGIN_URL . 'assets/js/admin.js',
+            array('jquery'),
+            DCG_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
+            'dcg-content-generator-js',
+            DCG_PLUGIN_URL . 'assets/js/content-generator.js',
+            array('jquery'),
+            DCG_VERSION,
+            true
+        );
+
+        // Localize script with AJAX URL and nonce
+        wp_localize_script('dcg-content-generator-js', 'dcg_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('dcg_nonce')
+        ));
     }
 
     /**
@@ -140,6 +208,9 @@ class Doorillio_Content_Generator {
         
         // Flush rewrite rules
         flush_rewrite_rules();
+        
+        // Set activation flag
+        set_transient('dcg_activation_notice', true, 30);
     }
 
     /**
@@ -187,6 +258,7 @@ class Doorillio_Content_Generator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             scheduled_date datetime NULL,
             options longtext NULL,
+            generated_content longtext NULL,
             PRIMARY KEY  (id),
             KEY plan_id (plan_id)
         ) $charset_collate;";
@@ -217,15 +289,18 @@ class Doorillio_Content_Generator {
             'version' => DCG_VERSION,
             'api_key' => '',
             'default_tone' => 'informative',
-            'default_article_length' => 1500,
+            'default_article_length' => 3000,
             'include_images' => true,
             'include_faqs' => true,
             'seo_level' => 80,
-            'content_specificity' => 70,
-            'preventRepetition' => true,
-            'includeExamples' => true,
-            'includeStatistics' => true,
-            'useCaseStudies' => true
+            'content_specificity' => 85,
+            'prevent_repetition' => true,
+            'include_examples' => true,
+            'include_statistics' => true,
+            'use_case_studies' => true,
+            'unsplash_api_key' => '',
+            'enable_research' => true,
+            'auto_save_content' => true
         );
         
         update_option('dcg_settings', $default_options);
@@ -237,6 +312,24 @@ class Doorillio_Content_Generator {
     private function clear_transients() {
         delete_transient('dcg_website_analysis');
         delete_transient('dcg_content_plan');
+        delete_transient('dcg_activation_notice');
+    }
+
+    /**
+     * Get plugin option.
+     */
+    public static function get_option($key, $default = null) {
+        $options = get_option('dcg_settings', array());
+        return isset($options[$key]) ? $options[$key] : $default;
+    }
+
+    /**
+     * Update plugin option.
+     */
+    public static function update_option($key, $value) {
+        $options = get_option('dcg_settings', array());
+        $options[$key] = $value;
+        update_option('dcg_settings', $options);
     }
 }
 
@@ -249,3 +342,16 @@ function doorillio_content_generator() {
 
 // Start the plugin
 doorillio_content_generator();
+
+// Add activation notice
+add_action('admin_notices', function() {
+    if (get_transient('dcg_activation_notice')) {
+        delete_transient('dcg_activation_notice');
+        ?>
+        <div class="notice notice-success is-dismissible">
+            <p><strong>Doorillio Content Generator</strong> has been activated successfully! 
+            <a href="<?php echo admin_url('admin.php?page=doorillio-content-generator'); ?>">Get started</a> by generating your first article.</p>
+        </div>
+        <?php
+    }
+});
