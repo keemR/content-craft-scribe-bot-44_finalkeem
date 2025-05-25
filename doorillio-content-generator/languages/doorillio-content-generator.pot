@@ -1,0 +1,32 @@
+
+# Copyright (C) 2024 Doorillio Content Generator
+# This file is distributed under the same license as the Doorillio Content Generator package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Doorillio Content Generator 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/doorillio-content-generator\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+msgid "Content Generator"
+msgstr ""
+
+msgid "Generate Content"
+msgstr ""
+
+msgid "Website Analysis"
+msgstr ""
+
+msgid "Content Planning"
+msgstr ""
+
+msgid "CSV Import"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
