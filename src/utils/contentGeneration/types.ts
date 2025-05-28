@@ -8,6 +8,7 @@ export interface ContentGenerationOptions {
   includeFAQs: boolean;
   seoLevel?: number;
   targetAudience?: string;
+  topicCategory?: string; // Added missing property
   
   // Added fields for better quality
   contentSpecificity?: number; // 1-100 scale for how specific vs. general content should be
