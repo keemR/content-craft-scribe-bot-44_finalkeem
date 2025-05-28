@@ -31,7 +31,7 @@ const SEOMetricsPanel = ({ metrics }: SEOMetricsPanelProps) => {
   };
 
   const getScoreBadge = (score: number) => {
-    if (score >= 80) return "success";
+    if (score >= 80) return "default"; // Changed from "success" to "default"
     if (score >= 60) return "secondary";
     return "destructive";
   };

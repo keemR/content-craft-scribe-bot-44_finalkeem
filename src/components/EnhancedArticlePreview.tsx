@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import SEOMetricsPanel from "./SEOMetricsPanel";
 import WordPressIntegration from "./WordPressIntegration";
-import { Copy, Download, Eye, Code, BarChart3, WordPress } from "lucide-react";
+import { Copy, Download, Eye, Code, BarChart3, Globe } from "lucide-react";
 
 interface EnhancedArticlePreviewProps {
   content: string;
@@ -150,7 +149,7 @@ const EnhancedArticlePreview = ({ content, title = "", keywords = "" }: Enhanced
             SEO Analysis
           </TabsTrigger>
           <TabsTrigger value="wordpress" className="flex items-center">
-            <WordPress className="w-4 h-4 mr-2" />
+            <Globe className="w-4 h-4 mr-2" />
             WordPress
           </TabsTrigger>
           <TabsTrigger value="code" className="flex items-center">

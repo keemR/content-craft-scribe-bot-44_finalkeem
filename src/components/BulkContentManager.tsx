@@ -145,7 +145,7 @@ const BulkContentManager = () => {
     switch (status) {
       case 'pending': return 'secondary';
       case 'generating': return 'default';
-      case 'completed': return 'success';
+      case 'completed': return 'default'; // Changed from 'success' to 'default'
       case 'error': return 'destructive';
       default: return 'secondary';
     }
