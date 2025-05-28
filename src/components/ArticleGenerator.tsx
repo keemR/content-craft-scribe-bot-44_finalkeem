@@ -11,7 +11,7 @@ import ResearchHandler from "@/components/ArticleGeneratorComponents/ResearchHan
 import { performWebResearch } from "@/services/researchService";
 
 interface ArticleGeneratorProps {
-  onContentGenerated: (content: string) => void;
+  onContentGenerated: (content: string, keywords?: string, title?: string) => void;
   setIsGenerating: (isGenerating: boolean) => void;
   isGenerating: boolean;
 }
@@ -26,7 +26,7 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
   const [advancedOptions, setAdvancedOptions] = useState(false);
   const [seoLevel, setSeoLevel] = useState(80);
   const [targetAudience, setTargetAudience] = useState("");
-  const [contentSpecificity, setContentSpecificity] = useState(85); // Higher default for more specific content
+  const [contentSpecificity, setContentSpecificity] = useState(85);
   const [isResearching, setIsResearching] = useState(false);
   const { toast } = useToast();
 
@@ -43,13 +43,12 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
     setIsGenerating(true);
     
     try {
-      // If no research data provided or it's minimal, perform web research
       let finalResearchData = researchData;
       
       if (!researchData.trim() || researchData.trim().length < 100) {
         toast({
           title: "Performing Research",
-          description: "No research data provided. Conducting web research on your keywords...",
+          description: "No research data provided. Conducting comprehensive web research...",
         });
         
         const webResearchData = await performWebResearch(
@@ -59,7 +58,6 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
         );
         finalResearchData = webResearchData;
       } else {
-        // If user provided data, still augment it with additional research
         toast({
           title: "Enhancing Research",
           description: "Supplementing your research with additional information...",
@@ -82,17 +80,21 @@ const ArticleGenerator = ({ onContentGenerated, setIsGenerating, isGenerating }:
         includeFAQs,
         seoLevel,
         targetAudience,
-        contentSpecificity, // Pass the specific content level
-        includeExamples: true, // Always include examples
-        includeStatistics: true, // Always include statistics
-        useCaseStudies: true // Always use case studies
+        contentSpecificity,
+        includeExamples: true,
+        includeStatistics: true,
+        useCaseStudies: true
       });
       
-      onContentGenerated(content);
+      // Extract title from content (first heading)
+      const titleMatch = content.match(/^# (.+)/m);
+      const generatedTitle = titleMatch ? titleMatch[1] : targetKeywords.split(',')[0]?.trim();
+      
+      onContentGenerated(content, targetKeywords, generatedTitle);
       
       toast({
         title: "Content Generation Complete",
-        description: "Your high-quality, unique article has been generated with enhanced research.",
+        description: "Your high-quality, SEO-optimized article has been generated with enhanced research and analytics.",
       });
     } catch (error) {
       console.error("Error generating content:", error);
