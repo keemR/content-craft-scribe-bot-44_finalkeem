@@ -105,19 +105,32 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
       topicCategory
     ) + "\n\n";
     
-    // ALWAYS add enhanced visual content for each section
-    console.log('Generating visuals for section:', heading, 'includeImages:', includeImages);
-    
+    // FORCE visual generation for EVERY section when images are enabled
     if (includeImages) {
+      console.log('Generating visuals for section:', heading, 'index:', index);
+      
       const visuals = generateEnhancedVisuals(heading, primaryKeyword, topicCategory, index);
-      console.log('Generated visuals:', visuals.length, 'visuals for', heading);
+      console.log('Generated visuals count:', visuals.length, 'for heading:', heading);
       
       if (visuals && visuals.length > 0) {
         const visualMarkdown = formatEnhancedVisualsForMarkdown(visuals);
+        console.log('Formatted visual markdown length:', visualMarkdown.length);
+        
         if (visualMarkdown && visualMarkdown.trim()) {
-          content += "### Visual Content\n\n";
+          content += "### 📸 Visual Content\n\n";
           content += visualMarkdown + "\n\n";
+        } else {
+          // Fallback visual if formatting fails
+          content += "### 📸 Visual Content\n\n";
+          content += `![${heading} - Professional Guide](https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80)\n\n`;
+          content += `*Professional illustration for ${heading.toLowerCase()}*\n\n`;
         }
+      } else {
+        // Force a fallback visual if no visuals are generated
+        console.log('No visuals generated, adding fallback for:', heading);
+        content += "### 📸 Visual Content\n\n";
+        content += `![${heading} - Expert Guide](https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80)\n\n`;
+        content += `*Expert guidance on ${heading.toLowerCase()}*\n\n`;
       }
     }
     
@@ -138,6 +151,7 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   content += generateConclusion(keywordsList, tone, targetAudience, topicCategory) + "\n\n";
   
   console.log('Content generation completed with', content.length, 'characters');
+  console.log('Visual sections included:', (content.match(/### 📸 Visual Content/g) || []).length);
   
   return content;
 };

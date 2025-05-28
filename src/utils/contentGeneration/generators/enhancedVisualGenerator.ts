@@ -1,4 +1,3 @@
-
 import { slugify } from '../helpers';
 
 export interface EnhancedVisualContent {
@@ -125,7 +124,7 @@ export function generateEnhancedVisuals(
   
   console.log('Generating visuals for:', { heading, primaryKeyword, topicCategory, sectionIndex });
   
-  // Generate topic-specific visuals based on keyword analysis
+  // ALWAYS generate at least one visual
   if (primaryKeyword.toLowerCase().includes('vitamin d') && primaryKeyword.toLowerCase().includes('deficiency')) {
     visuals.push(...generateVitaminDVisuals(heading, sectionIndex));
   } else if (topicCategory === 'health-fitness') {
@@ -134,22 +133,24 @@ export function generateEnhancedVisuals(
     visuals.push(...generateGenericVisuals(heading, primaryKeyword, sectionIndex));
   }
   
-  // Always add infographics for statistical sections
+  // ALWAYS add infographics for statistical sections
   if (shouldHaveInfographic(heading)) {
     visuals.push(generateInfographic(heading, primaryKeyword, sectionIndex));
   }
   
-  // Always add charts for data-heavy sections
+  // ALWAYS add charts for data-heavy sections
   if (shouldHaveChart(heading)) {
     visuals.push(generateChart(heading, primaryKeyword, sectionIndex));
   }
   
-  // Ensure we always return at least one visual
+  // GUARANTEE at least one visual
   if (visuals.length === 0) {
+    console.log('No visuals generated, adding guaranteed fallback');
     visuals.push(generateFallbackVisual(heading, primaryKeyword));
   }
   
-  return visuals.sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 2);
+  console.log('Final visuals count:', visuals.length, 'for heading:', heading);
+  return visuals.sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 3); // Return top 3 visuals
 }
 
 function generateVitaminDVisuals(heading: string, sectionIndex: number): EnhancedVisualContent[] {
@@ -163,7 +164,7 @@ function generateVitaminDVisuals(heading: string, sectionIndex: number): Enhance
       title: symptomsVisual.title,
       description: symptomsVisual.description,
       altText: `Medical illustration: ${symptomsVisual.description}`,
-      caption: `Clinical presentation: ${heading.toLowerCase()}`,
+      caption: `🩺 Clinical presentation: ${heading.toLowerCase()}`,
       placement: 'inline',
       imageUrl: symptomsVisual.url,
       relevanceScore: symptomsVisual.relevance
@@ -177,7 +178,7 @@ function generateVitaminDVisuals(heading: string, sectionIndex: number): Enhance
       title: testingVisual.title,
       description: testingVisual.description,
       altText: `Testing procedure: ${testingVisual.description}`,
-      caption: `Professional testing protocol for ${heading.toLowerCase()}`,
+      caption: `🔬 Professional testing protocol for ${heading.toLowerCase()}`,
       placement: 'featured',
       imageUrl: testingVisual.url,
       relevanceScore: testingVisual.relevance
@@ -191,7 +192,7 @@ function generateVitaminDVisuals(heading: string, sectionIndex: number): Enhance
       title: sourcesVisual.title,
       description: sourcesVisual.description,
       altText: `Nutritional guide: ${sourcesVisual.description}`,
-      caption: `Evidence-based sources for ${heading.toLowerCase()}`,
+      caption: `🥗 Evidence-based sources for ${heading.toLowerCase()}`,
       placement: 'inline',
       imageUrl: sourcesVisual.url,
       relevanceScore: sourcesVisual.relevance
@@ -205,7 +206,7 @@ function generateVitaminDVisuals(heading: string, sectionIndex: number): Enhance
       title: supplementVisual.title,
       description: supplementVisual.description,
       altText: `Supplement guide: ${supplementVisual.description}`,
-      caption: `Professional supplementation protocols for ${heading.toLowerCase()}`,
+      caption: `💊 Professional supplementation protocols for ${heading.toLowerCase()}`,
       placement: 'featured',
       imageUrl: supplementVisual.url,
       relevanceScore: supplementVisual.relevance
@@ -222,7 +223,7 @@ function generateHealthFitnessVisuals(heading: string, sectionIndex: number): En
     title: visual.title,
     description: visual.description,
     altText: `Health concept: ${visual.description}`,
-    caption: `Professional approach to ${heading.toLowerCase()}`,
+    caption: `💪 Professional approach to ${heading.toLowerCase()}`,
     placement: 'inline',
     imageUrl: visual.url,
     relevanceScore: visual.relevance
@@ -239,10 +240,10 @@ function generateGenericVisuals(heading: string, keyword: string, sectionIndex: 
   
   return [{
     type: 'hero-image',
-    title: `Professional ${heading} concept`,
+    title: `Professional ${heading} Guide`,
     description: `High-quality visual representation of ${heading.toLowerCase()}`,
     altText: `Professional concept illustration for ${heading.toLowerCase()}`,
-    caption: `Expert guidance on ${heading.toLowerCase()}`,
+    caption: `📊 Expert guidance on ${heading.toLowerCase()}`,
     placement: 'inline',
     imageUrl: genericImages[sectionIndex % genericImages.length],
     relevanceScore: 75
@@ -255,7 +256,7 @@ function generateFallbackVisual(heading: string, keyword: string): EnhancedVisua
     title: `${heading} - Professional Guide`,
     description: `Comprehensive visual guide for ${heading.toLowerCase()}`,
     altText: `Professional illustration for ${heading.toLowerCase()}`,
-    caption: `Expert insights on ${heading.toLowerCase()}`,
+    caption: `🎯 Expert insights on ${heading.toLowerCase()}`,
     placement: 'inline',
     imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
     relevanceScore: 70
@@ -294,7 +295,7 @@ function generateInfographic(heading: string, keyword: string, sectionIndex: num
     title,
     description: `Comprehensive statistical overview and data visualization for ${heading.toLowerCase()}`,
     altText: `Infographic displaying key statistics and data points for ${heading.toLowerCase()}`,
-    caption: `📊 Data-driven insights: ${heading} statistics with clinical evidence and research findings`,
+    caption: `📊 Data-driven insights: ${heading} statistics with clinical evidence`,
     placement: 'featured',
     chartData: infographicData,
     chartType: 'statistical-infographic',
@@ -336,7 +337,7 @@ function generateChart(heading: string, keyword: string, sectionIndex: number): 
     title,
     description: `Interactive data visualization and analysis for ${heading.toLowerCase()}`,
     altText: `Chart displaying quantitative analysis and trends for ${heading.toLowerCase()}`,
-    caption: `📈 Interactive Analysis: ${heading} metrics with comparative data and trends`,
+    caption: `📈 Interactive Analysis: ${heading} metrics with comparative data`,
     placement: 'inline',
     chartData,
     chartType,
@@ -356,13 +357,16 @@ function shouldHaveChart(heading: string): boolean {
 
 export function formatEnhancedVisualsForMarkdown(visuals: EnhancedVisualContent[]): string {
   if (!visuals || visuals.length === 0) {
+    console.log('No visuals to format');
     return '';
   }
 
-  return visuals.map(visual => {
+  console.log('Formatting', visuals.length, 'visuals for markdown');
+
+  return visuals.map((visual, index) => {
     let formattedContent = '';
     
-    // Always include the image if available
+    // ALWAYS include the image if available
     if (visual.imageUrl) {
       formattedContent += `![${visual.altText}](${visual.imageUrl})\n\n`;
       formattedContent += `**${visual.title}**\n\n`;
@@ -371,37 +375,26 @@ export function formatEnhancedVisualsForMarkdown(visuals: EnhancedVisualContent[
     
     // Add infographic data if available
     if (visual.type === 'infographic' && visual.chartData && visual.chartData.statistics) {
-      formattedContent += `### 📊 ${visual.title}\n\n`;
-      formattedContent += `<div class="infographic-container stats-visual">\n`;
-      formattedContent += `  <h4>📈 Key Statistics & Clinical Data</h4>\n`;
-      formattedContent += `  <div class="stats-grid">\n`;
+      formattedContent += `#### 📊 Key Statistics\n\n`;
+      formattedContent += `| Metric | Value | Context |\n`;
+      formattedContent += `|--------|--------|----------|\n`;
       
       visual.chartData.statistics.forEach((stat: any) => {
-        formattedContent += `    <div class="stat-item">\n`;
-        formattedContent += `      <div class="stat-value">${stat.value}</div>\n`;
-        formattedContent += `      <div class="stat-label">${stat.label}</div>\n`;
-        formattedContent += `      <div class="stat-context">${stat.context}</div>\n`;
-        formattedContent += `    </div>\n`;
+        formattedContent += `| ${stat.label} | **${stat.value}** | ${stat.context} |\n`;
       });
       
-      formattedContent += `  </div>\n`;
-      formattedContent += `</div>\n\n`;
-      formattedContent += `> 📊 **Research-Based Data**: These statistics are compiled from multiple peer-reviewed studies and clinical research.\n\n`;
+      formattedContent += `\n> 📊 **Research-Based Data**: These statistics are compiled from multiple peer-reviewed studies.\n\n`;
     }
     
     // Add chart visualization if available
     if (visual.type === 'chart' && visual.chartData) {
-      formattedContent += `### 📈 ${visual.title}\n\n`;
-      formattedContent += `<div class="chart-container">\n`;
-      formattedContent += `  <canvas id="chart-${visual.chartType}" data-chart='${JSON.stringify(visual.chartData)}'></canvas>\n`;
-      formattedContent += `</div>\n\n`;
-      formattedContent += `*${visual.caption}*\n\n`;
+      formattedContent += `#### 📈 Data Analysis\n\n`;
+      formattedContent += `\`\`\`\n`;
+      formattedContent += `Chart: ${visual.title}\n`;
+      formattedContent += `Type: ${visual.chartType}\n`;
+      formattedContent += `Data: ${JSON.stringify(visual.chartData, null, 2)}\n`;
+      formattedContent += `\`\`\`\n\n`;
       formattedContent += `> 📈 **Interactive Visualization**: This chart displays real-time data and research findings.\n\n`;
-    }
-    
-    // Add relevance indicator
-    if (visual.relevanceScore >= 90) {
-      formattedContent += `> 🎯 **Highly Relevant Content** (${visual.relevanceScore}% relevance) - This visual directly supports and enhances the section content.\n\n`;
     }
     
     return formattedContent;
