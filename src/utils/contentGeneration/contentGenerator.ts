@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ContentGenerationOptions } from './types';
 import { createTitleFromKeywords, slugify } from './helpers';
@@ -8,15 +9,15 @@ import { generateSectionContent } from './generators/sectionGenerator';
 import { generateFAQs } from './generators/faqGenerator';
 import { generateConclusion } from './generators/conclusionGenerator';
 import { determineTopicCategory } from './topicCategories';
-import { generateVisualContent, formatVisualContentForMarkdown, resetUsedImages } from './generators/visualContentGenerator';
+import { generateCompetitiveContent } from './generators/competitiveContentGenerator';
+import { generateEnhancedVisuals, formatEnhancedVisualsForMarkdown } from './generators/enhancedVisualGenerator';
+import { fetchRealTimeData } from './generators/realTimeDataService';
 
 /**
  * Generates high-quality SEO-optimized content based on user inputs
+ * Now uses competitive content generation for better quality
  */
-export const generateSEOContent = (options: ContentGenerationOptions): string => {
-  // Reset image tracking for new content generation
-  resetUsedImages();
-  
+export const generateSEOContent = async (options: ContentGenerationOptions): Promise<string> => {
   const { 
     researchData, 
     targetKeywords, 
@@ -44,6 +45,18 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
   
   // Identify topic category to customize content structure
   const topicCategory = determineTopicCategory(primaryKeyword);
+  
+  // Use competitive content generation for better quality
+  if (seoLevel >= 80 && numericArticleLength >= 3000) {
+    try {
+      return generateCompetitiveContent({
+        ...options,
+        topicCategory
+      });
+    } catch (error) {
+      console.error('Error generating competitive content, falling back to standard generation:', error);
+    }
+  }
   
   let content = "";
   
@@ -90,10 +103,10 @@ export const generateSEOContent = (options: ContentGenerationOptions): string =>
       topicCategory
     ) + "\n\n";
     
-    // Add comprehensive visual content for each section with no duplicates
+    // Add enhanced visual content for each section with high relevance
     if (includeImages) {
-      const visuals = generateVisualContent(heading, primaryKeyword, topicCategory, index);
-      const visualMarkdown = formatVisualContentForMarkdown(visuals);
+      const visuals = generateEnhancedVisuals(heading, primaryKeyword, topicCategory, index);
+      const visualMarkdown = formatEnhancedVisualsForMarkdown(visuals);
       content += visualMarkdown + "\n\n";
     }
   });
