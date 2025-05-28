@@ -46,6 +46,8 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   // Identify topic category to customize content structure
   const topicCategory = determineTopicCategory(primaryKeyword);
   
+  console.log('Content generation started:', { primaryKeyword, topicCategory, includeImages });
+  
   // Use competitive content generation for better quality
   if (seoLevel >= 80 && numericArticleLength >= 3000) {
     try {
@@ -103,11 +105,25 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
       topicCategory
     ) + "\n\n";
     
-    // Add enhanced visual content for each section with high relevance
+    // ALWAYS add enhanced visual content for each section
+    console.log('Generating visuals for section:', heading, 'includeImages:', includeImages);
+    
     if (includeImages) {
       const visuals = generateEnhancedVisuals(heading, primaryKeyword, topicCategory, index);
-      const visualMarkdown = formatEnhancedVisualsForMarkdown(visuals);
-      content += visualMarkdown + "\n\n";
+      console.log('Generated visuals:', visuals.length, 'visuals for', heading);
+      
+      if (visuals && visuals.length > 0) {
+        const visualMarkdown = formatEnhancedVisualsForMarkdown(visuals);
+        if (visualMarkdown && visualMarkdown.trim()) {
+          content += "### Visual Content\n\n";
+          content += visualMarkdown + "\n\n";
+        }
+      }
+    }
+    
+    // Add separator between sections
+    if (index < headings.length - 1) {
+      content += "---\n\n";
     }
   });
 
@@ -120,6 +136,8 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   // Add a conclusion with final CTA relevant to the topic
   content += "## Conclusion\n\n";
   content += generateConclusion(keywordsList, tone, targetAudience, topicCategory) + "\n\n";
+  
+  console.log('Content generation completed with', content.length, 'characters');
   
   return content;
 };
