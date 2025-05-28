@@ -105,33 +105,49 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
       topicCategory
     ) + "\n\n";
     
-    // FORCE visual generation for EVERY section when images are enabled
+    // SIMPLIFIED BUT GUARANTEED visual generation when images are enabled
     if (includeImages) {
-      console.log('Generating visuals for section:', heading, 'index:', index);
+      console.log(`🖼️ Adding visuals for section ${index + 1}: "${heading}"`);
       
-      const visuals = generateEnhancedVisuals(heading, primaryKeyword, topicCategory, index);
-      console.log('Generated visuals count:', visuals.length, 'for heading:', heading);
+      // Simple but guaranteed image insertion based on topic
+      let imageUrl = '';
+      let imageDescription = '';
       
-      if (visuals && visuals.length > 0) {
-        const visualMarkdown = formatEnhancedVisualsForMarkdown(visuals);
-        console.log('Formatted visual markdown length:', visualMarkdown.length);
-        
-        if (visualMarkdown && visualMarkdown.trim()) {
-          content += "### 📸 Visual Content\n\n";
-          content += visualMarkdown + "\n\n";
+      if (primaryKeyword.toLowerCase().includes('vitamin d')) {
+        if (heading.toLowerCase().includes('symptom') || heading.toLowerCase().includes('signs')) {
+          imageUrl = 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80';
+          imageDescription = 'Person experiencing vitamin D deficiency symptoms like fatigue and weakness';
+        } else if (heading.toLowerCase().includes('test') || heading.toLowerCase().includes('diagnos')) {
+          imageUrl = 'https://images.unsplash.com/photo-1582719471137-c3967ffaaf0e?w=800&q=80';
+          imageDescription = 'Healthcare professional conducting vitamin D blood test';
+        } else if (heading.toLowerCase().includes('food') || heading.toLowerCase().includes('source')) {
+          imageUrl = 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&q=80';
+          imageDescription = 'Vitamin D rich foods including salmon, eggs, and fortified dairy';
+        } else if (heading.toLowerCase().includes('supplement') || heading.toLowerCase().includes('treatment')) {
+          imageUrl = 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800&q=80';
+          imageDescription = 'Vitamin D3 supplements and recommended dosing';
         } else {
-          // Fallback visual if formatting fails
-          content += "### 📸 Visual Content\n\n";
-          content += `![${heading} - Professional Guide](https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80)\n\n`;
-          content += `*Professional illustration for ${heading.toLowerCase()}*\n\n`;
+          imageUrl = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&q=80';
+          imageDescription = 'Healthcare concept related to vitamin D and wellness';
         }
       } else {
-        // Force a fallback visual if no visuals are generated
-        console.log('No visuals generated, adding fallback for:', heading);
-        content += "### 📸 Visual Content\n\n";
-        content += `![${heading} - Expert Guide](https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80)\n\n`;
-        content += `*Expert guidance on ${heading.toLowerCase()}*\n\n`;
+        // Generic fallback images
+        const genericImages = [
+          'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+          'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
+          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+          'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&q=80'
+        ];
+        imageUrl = genericImages[index % genericImages.length];
+        imageDescription = `Professional illustration for ${heading.toLowerCase()}`;
       }
+      
+      // DIRECT image insertion - no complex logic
+      content += `### 📸 Visual Guide\n\n`;
+      content += `![${imageDescription}](${imageUrl})\n\n`;
+      content += `*${imageDescription} - Expert guidance for ${heading.toLowerCase()}*\n\n`;
+      
+      console.log(`✅ Added image for "${heading}": ${imageUrl}`);
     }
     
     // Add separator between sections
@@ -151,7 +167,7 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   content += generateConclusion(keywordsList, tone, targetAudience, topicCategory) + "\n\n";
   
   console.log('Content generation completed with', content.length, 'characters');
-  console.log('Visual sections included:', (content.match(/### 📸 Visual Content/g) || []).length);
+  console.log('Visual sections included:', (content.match(/### 📸 Visual Guide/g) || []).length);
   
   return content;
 };
