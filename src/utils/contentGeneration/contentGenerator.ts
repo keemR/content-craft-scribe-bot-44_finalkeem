@@ -17,60 +17,53 @@ import { fetchRealTimeData } from './generators/realTimeDataService';
  * Extracts statistics and data points from research data
  */
 const extractResearchStatistics = (researchData: string): string[] => {
+  if (!researchData || researchData.trim().length < 20) return [];
+  
   const statistics: string[] = [];
   
-  // Extract percentages
-  const percentageMatches = researchData.match(/\d+(?:\.\d+)?%/g) || [];
+  // Extract percentages with context
+  const percentageMatches = researchData.match(/\d+(?:\.\d+)?%[^.]*?(?:\.|;|,)/g) || [];
   percentageMatches.forEach(stat => {
-    const context = extractContextAroundStat(researchData, stat);
-    if (context) statistics.push(`${stat} ${context}`);
+    if (stat.length > 10) statistics.push(stat.trim());
   });
   
-  // Extract dollar amounts
-  const dollarMatches = researchData.match(/\$[\d,]+(?:\.\d+)?(?:[BM]|billion|million)?/gi) || [];
+  // Extract dollar amounts with context
+  const dollarMatches = researchData.match(/\$[\d,]+(?:\.\d+)?(?:[BM]|billion|million)?[^.]*?(?:\.|;|,)/gi) || [];
   dollarMatches.forEach(stat => {
-    const context = extractContextAroundStat(researchData, stat);
-    if (context) statistics.push(`${stat} ${context}`);
+    if (stat.length > 10) statistics.push(stat.trim());
   });
   
-  // Extract numerical facts
-  const numberMatches = researchData.match(/\d+(?:,\d+)*\s+(?:people|adults|patients|cases|studies)/gi) || [];
+  // Extract numerical facts with context
+  const numberMatches = researchData.match(/\d+(?:,\d+)*\s+(?:people|adults|patients|cases|studies)[^.]*?(?:\.|;|,)/gi) || [];
   numberMatches.forEach(stat => {
-    statistics.push(stat);
+    if (stat.length > 15) statistics.push(stat.trim());
   });
   
-  return statistics.slice(0, 5); // Return top 5 statistics
-};
-
-/**
- * Extracts context around a statistic for better readability
- */
-const extractContextAroundStat = (text: string, stat: string): string => {
-  const statIndex = text.indexOf(stat);
-  if (statIndex === -1) return '';
-  
-  const before = text.substring(Math.max(0, statIndex - 80), statIndex);
-  const after = text.substring(statIndex + stat.length, statIndex + stat.length + 80);
-  
-  // Extract meaningful context words
-  const beforeWords = before.split(' ').slice(-8).join(' ');
-  const afterWords = after.split(' ').slice(0, 8).join(' ');
-  
-  return `${beforeWords.trim()} ${afterWords.trim()}`.trim();
+  return statistics.slice(0, 8);
 };
 
 /**
  * Extracts expert quotes from research data
  */
 const extractResearchQuotes = (researchData: string): string[] => {
+  if (!researchData || researchData.trim().length < 20) return [];
+  
   const quotes: string[] = [];
   
   // Look for quoted text with attribution
-  const quotePattern = /"([^"]{30,200})"[\s\S]*?(?:said|stated|according to|notes|explains?)[\s\S]*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi;
+  const quotePattern = /"([^"]{30,300})"[\s\S]*?(?:said|stated|according to|notes|explains?|reports?)[\s\S]*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi;
   let match;
   
-  while ((match = quotePattern.exec(researchData)) !== null && quotes.length < 3) {
-    quotes.push(`"${match[1]}" - ${match[2]}`);
+  while ((match = quotePattern.exec(researchData)) !== null && quotes.length < 4) {
+    quotes.push(`"${match[1].trim()}" - ${match[2].trim()}`);
+  }
+  
+  // Look for statements by experts without quotes
+  const expertPattern = /(?:Dr\.|Professor|Expert|Researcher)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)[^.]*?(?:says?|states?|explains?|notes?|reports?)[^.]*?\.([^.]*\.)/gi;
+  let expertMatch;
+  
+  while ((expertMatch = expertPattern.exec(researchData)) !== null && quotes.length < 4) {
+    quotes.push(`"${expertMatch[2].trim()}" - ${expertMatch[1].trim()}`);
   }
   
   return quotes;
@@ -80,46 +73,68 @@ const extractResearchQuotes = (researchData: string): string[] => {
  * Extracts key research findings and studies
  */
 const extractResearchFindings = (researchData: string): string[] => {
+  if (!researchData || researchData.trim().length < 20) return [];
+  
   const findings: string[] = [];
   
-  // Look for study mentions
-  const studyPattern = /(?:study|research|trial|analysis|survey)[\s\S]*?(?:found|showed|revealed|demonstrated|concluded|reported)[\s\S]*?(?:\.|;)/gi;
+  // Look for study mentions with findings
+  const studyPattern = /(?:study|research|trial|analysis|survey|investigation)[^.]*?(?:found|showed|revealed|demonstrated|concluded|reported|discovered)[^.]*?\./gi;
   const matches = researchData.match(studyPattern) || [];
   
   matches.forEach(finding => {
-    if (finding.length > 50 && finding.length < 300) {
-      findings.push(finding.trim());
+    const cleanFinding = finding.trim();
+    if (cleanFinding.length > 40 && cleanFinding.length < 400) {
+      findings.push(cleanFinding);
     }
   });
   
-  return findings.slice(0, 4);
+  // Look for key findings or results
+  const findingPattern = /(?:key finding|main result|important discovery|significant result)[^.]*?\./gi;
+  const findingMatches = researchData.match(findingPattern) || [];
+  
+  findingMatches.forEach(finding => {
+    const cleanFinding = finding.trim();
+    if (cleanFinding.length > 30 && cleanFinding.length < 400) {
+      findings.push(cleanFinding);
+    }
+  });
+  
+  return findings.slice(0, 6);
 };
 
 /**
- * Generates research-enhanced content based on provided data
+ * Generates research-enhanced content for a specific section
  */
-const generateResearchEnhancedContent = (
+const generateResearchEnhancedSectionContent = (
   researchData: string,
-  keywordsList: string[],
   heading: string,
+  keywordsList: string[],
   tone: string,
-  sectionLength: number
+  targetLength: number
 ): string => {
+  if (!researchData || researchData.trim().length < 20) {
+    return generateSectionContent(heading, keywordsList, tone, targetLength, '', 'general');
+  }
+  
+  console.log(`🔬 Generating research-enhanced content for: "${heading}"`);
+  
   const statistics = extractResearchStatistics(researchData);
   const quotes = extractResearchQuotes(researchData);
   const findings = extractResearchFindings(researchData);
   
   let content = '';
   
-  // Add research-based introduction
+  // Start with research-based opening
   if (findings.length > 0) {
-    content += `${findings[0]}\n\n`;
+    content += `Recent research provides valuable insights into ${heading.toLowerCase()}. ${findings[0]}\n\n`;
+  } else {
+    content += `Understanding ${heading.toLowerCase()} is crucial for achieving optimal results. Current research and expert analysis reveal important considerations for implementation.\n\n`;
   }
   
-  // Add relevant statistics
+  // Add relevant statistics if available
   if (statistics.length > 0) {
-    content += `**Key Research Data:**\n`;
-    statistics.forEach(stat => {
+    content += `**Research Data & Statistics:**\n\n`;
+    statistics.slice(0, 3).forEach(stat => {
       content += `- ${stat}\n`;
     });
     content += '\n';
@@ -127,16 +142,36 @@ const generateResearchEnhancedContent = (
   
   // Add expert insights if available
   if (quotes.length > 0) {
-    content += `**Expert Insight:**\n${quotes[0]}\n\n`;
+    content += `**Expert Perspective:**\n\n`;
+    content += `${quotes[0]}\n\n`;
   }
   
   // Add additional research findings
   if (findings.length > 1) {
-    content += `**Research Evidence:**\n`;
-    findings.slice(1).forEach(finding => {
+    content += `**Key Research Insights:**\n\n`;
+    findings.slice(1, 3).forEach(finding => {
       content += `${finding}\n\n`;
     });
   }
+  
+  // Add practical application section
+  content += `**Practical Application:**\n\n`;
+  content += `Based on the research evidence, implementing effective ${heading.toLowerCase()} strategies requires:\n\n`;
+  content += `- Following evidence-based protocols and guidelines\n`;
+  content += `- Considering individual circumstances and risk factors\n`;
+  content += `- Regular monitoring and adjustment of approaches\n`;
+  content += `- Staying informed about latest research developments\n\n`;
+  
+  // Add relevant additional statistics
+  if (statistics.length > 3) {
+    content += `**Additional Research Data:**\n\n`;
+    statistics.slice(3, 6).forEach(stat => {
+      content += `- ${stat}\n`;
+    });
+    content += '\n';
+  }
+  
+  console.log(`✅ Generated ${content.length} characters of research-enhanced content for "${heading}"`);
   
   return content;
 };
@@ -174,13 +209,21 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   // Identify topic category to customize content structure
   const topicCategory = determineTopicCategory(primaryKeyword);
   
-  console.log('Content generation started:', { primaryKeyword, topicCategory, includeImages, hasResearchData: !!researchData?.trim() });
-  
-  // Check if we have research data to enhance content
+  // Check if we have substantial research data
   const hasResearchData = researchData && researchData.trim().length > 50;
   
+  console.log('Content generation started:', { 
+    primaryKeyword, 
+    topicCategory, 
+    includeImages, 
+    hasResearchData,
+    researchDataLength: researchData?.length || 0
+  });
+  
   if (hasResearchData) {
-    console.log('Using provided research data to enhance content quality');
+    console.log('✅ Using provided research data to enhance content quality');
+  } else {
+    console.log('ℹ️ No research data provided, using standard content generation');
   }
   
   // Use competitive content generation for better quality
@@ -197,38 +240,57 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   
   let content = "";
   
-  // Create optimized title without redundancies
+  // Create optimized title
   const title = createTitleFromKeywords(keywordsList, topicCategory);
   content += `# ${title}\n\n`;
   
-  // Add estimated reading time for better user experience
-  const estimatedReadingTime = Math.ceil(numericArticleLength / 200); // 200 words per minute
+  // Add estimated reading time
+  const estimatedReadingTime = Math.ceil(numericArticleLength / 200);
   content += `*Reading time: ${estimatedReadingTime} minutes*\n\n`;
   
-  // Add research data overview if available
+  // Add research overview if we have research data
   if (hasResearchData) {
+    console.log('📊 Adding research overview section');
     const researchStats = extractResearchStatistics(researchData);
-    if (researchStats.length > 0) {
+    const researchQuotes = extractResearchQuotes(researchData);
+    
+    if (researchStats.length > 0 || researchQuotes.length > 0) {
       content += "## Research Overview\n\n";
-      content += "This guide is based on the latest research and data:\n\n";
-      researchStats.slice(0, 3).forEach(stat => {
-        content += `- ${stat}\n`;
-      });
-      content += "\n\n";
+      content += "This comprehensive guide is based on the latest research and expert analysis:\n\n";
+      
+      if (researchStats.length > 0) {
+        content += "**Key Statistics:**\n\n";
+        researchStats.slice(0, 4).forEach(stat => {
+          content += `- ${stat}\n`;
+        });
+        content += "\n";
+      }
+      
+      if (researchQuotes.length > 0) {
+        content += "**Expert Insight:**\n\n";
+        content += `${researchQuotes[0]}\n\n`;
+      }
+      
+      content += "---\n\n";
     }
   }
   
   // Key Takeaways - enhanced with research data
   content += "## Key Takeaways\n\n";
   if (hasResearchData) {
+    console.log('🎯 Enhancing takeaways with research findings');
     const findings = extractResearchFindings(researchData);
     if (findings.length > 0) {
-      findings.slice(0, 3).forEach(finding => {
-        content += `- ${finding.replace(/^[^a-zA-Z]*/, '').trim()}\n`;
+      content += "**Research-Based Key Points:**\n\n";
+      findings.slice(0, 4).forEach(finding => {
+        const cleanFinding = finding.replace(/^[^a-zA-Z]*/, '').trim();
+        content += `- ${cleanFinding}\n`;
       });
       content += "\n";
     }
   }
+  
+  // Add standard takeaways
   const takeaways = generateKeyTakeaways(keywordsList, topicCategory);
   content += takeaways + "\n\n";
   
@@ -241,28 +303,32 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   }
   content += generateIntroduction(keywordsList, tone, targetAudience, topicCategory) + "\n\n";
   
-  // Table of Contents for improved UX and crawlability
+  // Table of Contents
   content += "## Table of Contents\n\n";
   const headings = generateHeadings(keywordsList, topicCategory, targetAudience);
   
-  // Generate Table of Contents with anchor links
   headings.forEach((heading, index) => {
     content += `${index + 1}. [${heading}](#${slugify(heading)})\n`;
   });
   content += "\n\n";
   
-  // Calculate the section length as a number based on article length and number of headings
+  // Calculate section length
   const sectionLength = Math.floor(numericArticleLength / headings.length);
   
+  // Generate sections with research data integration
   headings.forEach((heading, index) => {
-    // Create proper heading IDs for anchor links
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
     // Generate section content with research data if available
     if (hasResearchData) {
-      content += generateResearchEnhancedContent(researchData, keywordsList, heading, tone, sectionLength) + "\n\n";
+      content += generateResearchEnhancedSectionContent(
+        researchData, 
+        heading, 
+        keywordsList, 
+        tone, 
+        sectionLength
+      ) + "\n\n";
     } else {
-      // Generate standard section content
       content += generateSectionContent(
         heading, 
         keywordsList, 
@@ -273,33 +339,34 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
       ) + "\n\n";
     }
     
-    // SIMPLIFIED BUT GUARANTEED visual generation when images are enabled
+    // Add images when enabled
     if (includeImages) {
-      console.log(`🖼️ Adding visuals for section ${index + 1}: "${heading}"`);
+      console.log(`🖼️ Adding visual for section ${index + 1}: "${heading}"`);
       
-      // Simple but guaranteed image insertion based on topic
       let imageUrl = '';
       let imageDescription = '';
       
       if (primaryKeyword.toLowerCase().includes('vitamin d')) {
-        if (heading.toLowerCase().includes('symptom') || heading.toLowerCase().includes('signs')) {
-          imageUrl = 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80';
-          imageDescription = 'Person experiencing vitamin D deficiency symptoms like fatigue and weakness';
-        } else if (heading.toLowerCase().includes('test') || heading.toLowerCase().includes('diagnos')) {
-          imageUrl = 'https://images.unsplash.com/photo-1582719471137-c3967ffaaf0e?w=800&q=80';
-          imageDescription = 'Healthcare professional conducting vitamin D blood test';
-        } else if (heading.toLowerCase().includes('food') || heading.toLowerCase().includes('source')) {
-          imageUrl = 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&q=80';
-          imageDescription = 'Vitamin D rich foods including salmon, eggs, and fortified dairy';
-        } else if (heading.toLowerCase().includes('supplement') || heading.toLowerCase().includes('treatment')) {
-          imageUrl = 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800&q=80';
-          imageDescription = 'Vitamin D3 supplements and recommended dosing';
-        } else {
-          imageUrl = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&q=80';
-          imageDescription = 'Healthcare concept related to vitamin D and wellness';
-        }
+        const vitaminDImages = [
+          { url: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80', desc: 'Person experiencing vitamin D deficiency symptoms' },
+          { url: 'https://images.unsplash.com/photo-1582719471137-c3967ffaaf0e?w=800&q=80', desc: 'Healthcare professional conducting vitamin D blood test' },
+          { url: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&q=80', desc: 'Vitamin D rich foods including salmon and eggs' },
+          { url: 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800&q=80', desc: 'Vitamin D3 supplements and dosing information' }
+        ];
+        const imageData = vitaminDImages[index % vitaminDImages.length];
+        imageUrl = imageData.url;
+        imageDescription = imageData.desc;
+      } else if (primaryKeyword.toLowerCase().includes('zinc')) {
+        const zincImages = [
+          { url: 'https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800&q=80', desc: 'Zinc-rich foods for immune system support' },
+          { url: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800&q=80', desc: 'Healthy zinc-containing foods and supplements' },
+          { url: 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&q=80', desc: 'Nutritional sources of zinc for optimal health' },
+          { url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80', desc: 'Zinc supplementation and immune support' }
+        ];
+        const imageData = zincImages[index % zincImages.length];
+        imageUrl = imageData.url;
+        imageDescription = imageData.desc;
       } else {
-        // Generic fallback images
         const genericImages = [
           'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
           'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80',
@@ -310,33 +377,30 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
         imageDescription = `Professional illustration for ${heading.toLowerCase()}`;
       }
       
-      // DIRECT image insertion - no complex logic
       content += `### 📸 Visual Guide\n\n`;
       content += `![${imageDescription}](${imageUrl})\n\n`;
-      content += `*${imageDescription} - Expert guidance for ${heading.toLowerCase()}*\n\n`;
+      content += `*${imageDescription} - Evidence-based guidance for ${heading.toLowerCase()}*\n\n`;
       
       console.log(`✅ Added image for "${heading}": ${imageUrl}`);
     }
     
-    // Add separator between sections
     if (index < headings.length - 1) {
       content += "---\n\n";
     }
   });
 
-  // Add relevant FAQs specific to the topic
+  // Add FAQs
   if (includeFAQs) {
     content += "## Frequently Asked Questions\n\n";
     content += generateFAQs(keywordsList, targetAudience, topicCategory) + "\n\n";
   }
 
-  // Add a conclusion with final CTA relevant to the topic
+  // Add conclusion
   content += "## Conclusion\n\n";
   content += generateConclusion(keywordsList, tone, targetAudience, topicCategory) + "\n\n";
   
-  console.log('Content generation completed with', content.length, 'characters');
-  console.log('Visual sections included:', (content.match(/### 📸 Visual Guide/g) || []).length);
-  console.log('Research data utilized:', hasResearchData ? 'Yes' : 'No');
+  console.log('✅ Content generation completed');
+  console.log(`📊 Final stats: ${content.length} characters, ${(content.match(/### 📸 Visual Guide/g) || []).length} visuals, research data: ${hasResearchData ? 'YES' : 'NO'}`);
   
   return content;
 };
