@@ -14,8 +14,136 @@ import { generateEnhancedVisuals, formatEnhancedVisualsForMarkdown } from './gen
 import { fetchRealTimeData } from './generators/realTimeDataService';
 
 /**
+ * Extracts statistics and data points from research data
+ */
+const extractResearchStatistics = (researchData: string): string[] => {
+  const statistics: string[] = [];
+  
+  // Extract percentages
+  const percentageMatches = researchData.match(/\d+(?:\.\d+)?%/g) || [];
+  percentageMatches.forEach(stat => {
+    const context = extractContextAroundStat(researchData, stat);
+    if (context) statistics.push(`${stat} ${context}`);
+  });
+  
+  // Extract dollar amounts
+  const dollarMatches = researchData.match(/\$[\d,]+(?:\.\d+)?(?:[BM]|billion|million)?/gi) || [];
+  dollarMatches.forEach(stat => {
+    const context = extractContextAroundStat(researchData, stat);
+    if (context) statistics.push(`${stat} ${context}`);
+  });
+  
+  // Extract numerical facts
+  const numberMatches = researchData.match(/\d+(?:,\d+)*\s+(?:people|adults|patients|cases|studies)/gi) || [];
+  numberMatches.forEach(stat => {
+    statistics.push(stat);
+  });
+  
+  return statistics.slice(0, 5); // Return top 5 statistics
+};
+
+/**
+ * Extracts context around a statistic for better readability
+ */
+const extractContextAroundStat = (text: string, stat: string): string => {
+  const statIndex = text.indexOf(stat);
+  if (statIndex === -1) return '';
+  
+  const before = text.substring(Math.max(0, statIndex - 80), statIndex);
+  const after = text.substring(statIndex + stat.length, statIndex + stat.length + 80);
+  
+  // Extract meaningful context words
+  const beforeWords = before.split(' ').slice(-8).join(' ');
+  const afterWords = after.split(' ').slice(0, 8).join(' ');
+  
+  return `${beforeWords.trim()} ${afterWords.trim()}`.trim();
+};
+
+/**
+ * Extracts expert quotes from research data
+ */
+const extractResearchQuotes = (researchData: string): string[] => {
+  const quotes: string[] = [];
+  
+  // Look for quoted text with attribution
+  const quotePattern = /"([^"]{30,200})"[\s\S]*?(?:said|stated|according to|notes|explains?)[\s\S]*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi;
+  let match;
+  
+  while ((match = quotePattern.exec(researchData)) !== null && quotes.length < 3) {
+    quotes.push(`"${match[1]}" - ${match[2]}`);
+  }
+  
+  return quotes;
+};
+
+/**
+ * Extracts key research findings and studies
+ */
+const extractResearchFindings = (researchData: string): string[] => {
+  const findings: string[] = [];
+  
+  // Look for study mentions
+  const studyPattern = /(?:study|research|trial|analysis|survey)[\s\S]*?(?:found|showed|revealed|demonstrated|concluded|reported)[\s\S]*?(?:\.|;)/gi;
+  const matches = researchData.match(studyPattern) || [];
+  
+  matches.forEach(finding => {
+    if (finding.length > 50 && finding.length < 300) {
+      findings.push(finding.trim());
+    }
+  });
+  
+  return findings.slice(0, 4);
+};
+
+/**
+ * Generates research-enhanced content based on provided data
+ */
+const generateResearchEnhancedContent = (
+  researchData: string,
+  keywordsList: string[],
+  heading: string,
+  tone: string,
+  sectionLength: number
+): string => {
+  const statistics = extractResearchStatistics(researchData);
+  const quotes = extractResearchQuotes(researchData);
+  const findings = extractResearchFindings(researchData);
+  
+  let content = '';
+  
+  // Add research-based introduction
+  if (findings.length > 0) {
+    content += `${findings[0]}\n\n`;
+  }
+  
+  // Add relevant statistics
+  if (statistics.length > 0) {
+    content += `**Key Research Data:**\n`;
+    statistics.forEach(stat => {
+      content += `- ${stat}\n`;
+    });
+    content += '\n';
+  }
+  
+  // Add expert insights if available
+  if (quotes.length > 0) {
+    content += `**Expert Insight:**\n${quotes[0]}\n\n`;
+  }
+  
+  // Add additional research findings
+  if (findings.length > 1) {
+    content += `**Research Evidence:**\n`;
+    findings.slice(1).forEach(finding => {
+      content += `${finding}\n\n`;
+    });
+  }
+  
+  return content;
+};
+
+/**
  * Generates high-quality SEO-optimized content based on user inputs
- * Now uses competitive content generation for better quality
+ * Now properly uses research data when provided
  */
 export const generateSEOContent = async (options: ContentGenerationOptions): Promise<string> => {
   const { 
@@ -46,7 +174,14 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   // Identify topic category to customize content structure
   const topicCategory = determineTopicCategory(primaryKeyword);
   
-  console.log('Content generation started:', { primaryKeyword, topicCategory, includeImages });
+  console.log('Content generation started:', { primaryKeyword, topicCategory, includeImages, hasResearchData: !!researchData?.trim() });
+  
+  // Check if we have research data to enhance content
+  const hasResearchData = researchData && researchData.trim().length > 50;
+  
+  if (hasResearchData) {
+    console.log('Using provided research data to enhance content quality');
+  }
   
   // Use competitive content generation for better quality
   if (seoLevel >= 80 && numericArticleLength >= 3000) {
@@ -70,12 +205,40 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   const estimatedReadingTime = Math.ceil(numericArticleLength / 200); // 200 words per minute
   content += `*Reading time: ${estimatedReadingTime} minutes*\n\n`;
   
-  // Key Takeaways - optimized for featured snippets with specific, valuable insights
+  // Add research data overview if available
+  if (hasResearchData) {
+    const researchStats = extractResearchStatistics(researchData);
+    if (researchStats.length > 0) {
+      content += "## Research Overview\n\n";
+      content += "This guide is based on the latest research and data:\n\n";
+      researchStats.slice(0, 3).forEach(stat => {
+        content += `- ${stat}\n`;
+      });
+      content += "\n\n";
+    }
+  }
+  
+  // Key Takeaways - enhanced with research data
   content += "## Key Takeaways\n\n";
+  if (hasResearchData) {
+    const findings = extractResearchFindings(researchData);
+    if (findings.length > 0) {
+      findings.slice(0, 3).forEach(finding => {
+        content += `- ${finding.replace(/^[^a-zA-Z]*/, '').trim()}\n`;
+      });
+      content += "\n";
+    }
+  }
   const takeaways = generateKeyTakeaways(keywordsList, topicCategory);
   content += takeaways + "\n\n";
   
-  // Generate introduction with topic-specific information
+  // Generate introduction enhanced with research data
+  if (hasResearchData) {
+    const quotes = extractResearchQuotes(researchData);
+    if (quotes.length > 0) {
+      content += `> ${quotes[0]}\n\n`;
+    }
+  }
   content += generateIntroduction(keywordsList, tone, targetAudience, topicCategory) + "\n\n";
   
   // Table of Contents for improved UX and crawlability
@@ -95,15 +258,20 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
     // Create proper heading IDs for anchor links
     content += `<h2 id="${slugify(heading)}">${heading}</h2>\n\n`;
     
-    // Generate section content with proper argument types
-    content += generateSectionContent(
-      heading, 
-      keywordsList, 
-      tone, 
-      sectionLength, 
-      targetAudience, 
-      topicCategory
-    ) + "\n\n";
+    // Generate section content with research data if available
+    if (hasResearchData) {
+      content += generateResearchEnhancedContent(researchData, keywordsList, heading, tone, sectionLength) + "\n\n";
+    } else {
+      // Generate standard section content
+      content += generateSectionContent(
+        heading, 
+        keywordsList, 
+        tone, 
+        sectionLength, 
+        targetAudience, 
+        topicCategory
+      ) + "\n\n";
+    }
     
     // SIMPLIFIED BUT GUARANTEED visual generation when images are enabled
     if (includeImages) {
@@ -168,6 +336,7 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   
   console.log('Content generation completed with', content.length, 'characters');
   console.log('Visual sections included:', (content.match(/### 📸 Visual Guide/g) || []).length);
+  console.log('Research data utilized:', hasResearchData ? 'Yes' : 'No');
   
   return content;
 };
