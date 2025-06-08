@@ -108,7 +108,7 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   // Ensure minimum length is met
   if (content.length < numericArticleLength * 4) { // Assuming ~4 chars per word
     console.log('Content too short, expanding...');
-    content = await expandContent(content, enhancedOptions, numericArticleLength);
+    content = await expandContent(content, enhancedOptions, numericArticleLength, topicCategory);
   }
   
   console.log(`✅ Content generation completed: ${content.length} characters (target: ${numericArticleLength * 4})`);
@@ -122,7 +122,8 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
 async function expandContent(
   existingContent: string, 
   options: any, 
-  targetLength: number
+  targetLength: number,
+  topicCategory: string
 ): Promise<string> {
   const currentLength = existingContent.length;
   const targetChars = targetLength * 4; // ~4 chars per word
@@ -132,7 +133,7 @@ async function expandContent(
   }
   
   // Add more detailed sections
-  const expansionSections = generateExpansionSections(options.primaryKeyword, options.topicCategory);
+  const expansionSections = generateExpansionSections(options.primaryKeyword, topicCategory);
   
   let expandedContent = existingContent;
   
