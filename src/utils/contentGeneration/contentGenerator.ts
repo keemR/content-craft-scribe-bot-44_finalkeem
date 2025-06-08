@@ -1,14 +1,14 @@
 
 import { ContentGenerationOptions } from './types';
-import { generateEnhancedSEOContent } from './enhancedContentGenerator';
+import { orchestrateContentGeneration } from './contentOrchestrator';
 
 /**
- * Enhanced content generator with human-focused SEO optimization
- * Now uses comprehensive research and quality validation
+ * Main content generator entry point
+ * Simplified to focus on the primary generation flow
  */
 export const generateSEOContent = async (options: ContentGenerationOptions): Promise<string> => {
-  console.log('🚀 Using enhanced content generation system');
+  console.log('🚀 Starting SEO content generation');
   
-  // Use the new enhanced generator
-  return await generateEnhancedSEOContent(options);
+  // Delegate to the content orchestrator
+  return await orchestrateContentGeneration(options);
 };
