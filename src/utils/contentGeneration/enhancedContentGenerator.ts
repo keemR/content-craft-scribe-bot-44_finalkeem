@@ -1,4 +1,5 @@
 
+import { ContentGenerationOptions } from './types';
 import { generateSectionSpecificContent, determineSectionType } from './generators/sectionSpecificGenerator';
 import { generateMedicalReviewerBox, generateReferencesSection, generateDetailedAuthorSection, addInlineCitations, hyperlinkStudyMentions } from './generators/eatSignalsGenerator';
 
@@ -15,25 +16,12 @@ interface SerpData {
   contextSpecificStats: ContextSpecificStats;
 }
 
-interface ContentGenerationOptions {
-  primaryKeyword: string;
-  semanticKeywords?: string[];
-  serpData?: SerpData;
-  researchData?: string;
-  articleLength?: number;
-  tone?: string;
-  includeImages?: boolean;
-  includeFAQs?: boolean;
-  seoLevel?: number;
-  targetAudience?: string;
-  contentSpecificity?: number;
-}
-
 export async function generateEnhancedContent(options: ContentGenerationOptions): Promise<string> {
+  // Map targetKeywords to primaryKeyword for backward compatibility
+  const primaryKeyword = options.targetKeywords || '';
+  const semanticKeywords: string[] = [];
+  const serpData: SerpData = { keyStatistics: [], contextSpecificStats: {} };
   const {
-    primaryKeyword,
-    semanticKeywords = [],
-    serpData = { keyStatistics: [], contextSpecificStats: {} },
     researchData = '',
     articleLength = 3000,
     tone = 'informative',
