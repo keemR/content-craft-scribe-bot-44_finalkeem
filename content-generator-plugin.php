@@ -3,12 +3,15 @@
 /**
  * Plugin Name: Doorillio Content Generator
  * Plugin URI: https://doorillio.com/content-generator
- * Description: AI-powered SEO content planning and generation system for health, wellness, and lifestyle websites.
- * Version: 1.0.0
+ * Description: Advanced AI-powered SEO content planning and generation system with enhanced research capabilities.
+ * Version: 2.0.0
  * Author: Doorillio
  * Author URI: https://doorillio.com
  * Text Domain: doorillio-content-generator
  * Domain Path: /languages
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
  */
 
 // Exit if accessed directly
@@ -17,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DCG_VERSION', '1.0.0');
+define('DCG_VERSION', '2.0.0');
 define('DCG_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DCG_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -29,6 +32,8 @@ require_once DCG_PLUGIN_DIR . 'includes/class-dcg-content-planner.php';
 require_once DCG_PLUGIN_DIR . 'includes/class-dcg-content-generator.php';
 require_once DCG_PLUGIN_DIR . 'includes/class-dcg-csv-importer.php';
 require_once DCG_PLUGIN_DIR . 'includes/class-dcg-content-generator-api.php';
+require_once DCG_PLUGIN_DIR . 'includes/class-dcg-enhanced-content-generator.php';
+require_once DCG_PLUGIN_DIR . 'includes/class-dcg-research-service.php';
 
 /**
  * The main plugin class
@@ -78,6 +83,20 @@ class Doorillio_Content_Generator {
     private $generator;
 
     /**
+     * Enhanced content generator
+     *
+     * @var DCG_Enhanced_Content_Generator
+     */
+    private $enhanced_generator;
+
+    /**
+     * Research service
+     *
+     * @var DCG_Research_Service
+     */
+    private $research_service;
+
+    /**
      * CSV Importer
      *
      * @var DCG_CSV_Importer
@@ -120,6 +139,8 @@ class Doorillio_Content_Generator {
         $this->analyzer = new DCG_Website_Analyzer();
         $this->planner = new DCG_Content_Planner();
         $this->generator = new DCG_Content_Generator();
+        $this->enhanced_generator = new DCG_Enhanced_Content_Generator();
+        $this->research_service = new DCG_Research_Service();
         $this->importer = new DCG_CSV_Importer();
         $this->api = new DCG_Content_Generator_API();
     }
@@ -189,7 +210,8 @@ class Doorillio_Content_Generator {
         // Localize script with AJAX URL and nonce
         wp_localize_script('dcg-content-generator-js', 'dcg_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('dcg_nonce')
+            'nonce' => wp_create_nonce('dcg_nonce'),
+            'version' => DCG_VERSION
         ));
     }
 
@@ -275,10 +297,23 @@ class Doorillio_Content_Generator {
             KEY post_id (post_id)
         ) $charset_collate;";
 
+        // Research cache table
+        $table_research = $wpdb->prefix . 'dcg_research_cache';
+        $sql_research = "CREATE TABLE $table_research (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            keyword_hash varchar(255) NOT NULL,
+            research_data longtext NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            expires_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY keyword_hash (keyword_hash)
+        ) $charset_collate;";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
         dbDelta($sql_queue);
         dbDelta($sql_analysis);
+        dbDelta($sql_research);
     }
 
     /**
@@ -300,7 +335,12 @@ class Doorillio_Content_Generator {
             'use_case_studies' => true,
             'unsplash_api_key' => '',
             'enable_research' => true,
-            'auto_save_content' => true
+            'auto_save_content' => true,
+            'enhanced_content_generation' => true,
+            'research_cache_duration' => 24,
+            'max_research_sources' => 10,
+            'enable_visual_content' => true,
+            'quality_validation' => true
         );
         
         update_option('dcg_settings', $default_options);
@@ -313,6 +353,7 @@ class Doorillio_Content_Generator {
         delete_transient('dcg_website_analysis');
         delete_transient('dcg_content_plan');
         delete_transient('dcg_activation_notice');
+        delete_transient('dcg_research_cache');
     }
 
     /**
@@ -349,9 +390,23 @@ add_action('admin_notices', function() {
         delete_transient('dcg_activation_notice');
         ?>
         <div class="notice notice-success is-dismissible">
-            <p><strong>Doorillio Content Generator</strong> has been activated successfully! 
-            <a href="<?php echo admin_url('admin.php?page=doorillio-content-generator'); ?>">Get started</a> by generating your first article.</p>
+            <p><strong>Doorillio Content Generator v2.0</strong> has been activated successfully! 
+            <a href="<?php echo admin_url('admin.php?page=doorillio-content-generator'); ?>">Get started</a> with enhanced AI content generation.</p>
         </div>
         <?php
+    }
+});
+
+// Add upgrade notice for existing users
+add_action('admin_notices', function() {
+    $current_version = get_option('dcg_version', '1.0.0');
+    if (version_compare($current_version, DCG_VERSION, '<')) {
+        ?>
+        <div class="notice notice-info is-dismissible">
+            <p><strong>Doorillio Content Generator</strong> has been upgraded to v<?php echo DCG_VERSION; ?>! 
+            New features include enhanced research capabilities and improved content quality.</p>
+        </div>
+        <?php
+        update_option('dcg_version', DCG_VERSION);
     }
 });
