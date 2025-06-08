@@ -108,7 +108,8 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
       enhancedResearchData,
       semanticKeywords,
       sectionLength,
-      index
+      index,
+      topicCategory
     ) + "\n\n";
     
     // Add structured data elements
@@ -129,7 +130,7 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   // Value-driven FAQ section
   if (includeFAQs) {
     content += "## Frequently Asked Questions\n\n";
-    content += generateValueDrivenFAQs(primaryKeyword, serpData, semanticKeywords) + "\n\n";
+    content += generateValueDrivenFAQs(primaryKeyword, serpData, semanticKeywords, topicCategory) + "\n\n";
   }
 
   // Expert-backed conclusion
@@ -396,7 +397,8 @@ function generateValueDrivenSection(
   researchData: string,
   semanticKeywords: string[],
   targetLength: number,
-  index: number
+  index: number,
+  topicCategory: string
 ): string {
   const alternativeKeyword = semanticKeywords[index % semanticKeywords.length] || keyword;
   const relevantStat = serpData.keyStatistics[index] || serpData.keyStatistics[0];
@@ -680,7 +682,7 @@ function generateNutritionTable(keyword: string, serpData: any): string {
 /**
  * Generate value-driven FAQs
  */
-function generateValueDrivenFAQs(keyword: string, serpData: any, semanticKeywords: string[]): string {
+function generateValueDrivenFAQs(keyword: string, serpData: any, semanticKeywords: string[], topicCategory: string): string {
   let faqs = "";
   const questions = serpData.relatedQuestions.slice(0, 6);
   

@@ -1,4 +1,5 @@
 import { slugify } from '../helpers';
+import { generateOnlineIncomeVisuals } from './onlineIncomeVisuals';
 
 export interface EnhancedVisualContent {
   type: 'hero-image' | 'infographic' | 'chart' | 'diagram' | 'medical-illustration' | 'comparison-table' | 'timeline' | 'anatomy-diagram';
@@ -124,8 +125,10 @@ export function generateEnhancedVisuals(
   
   console.log('Generating visuals for:', { heading, primaryKeyword, topicCategory, sectionIndex });
   
-  // ALWAYS generate at least one visual
-  if (primaryKeyword.toLowerCase().includes('vitamin d') && primaryKeyword.toLowerCase().includes('deficiency')) {
+  // Generate topic-specific visuals
+  if (topicCategory === 'online-income') {
+    visuals.push(...generateOnlineIncomeVisuals(heading, primaryKeyword, sectionIndex));
+  } else if (primaryKeyword.toLowerCase().includes('vitamin d') && primaryKeyword.toLowerCase().includes('deficiency')) {
     visuals.push(...generateVitaminDVisuals(heading, sectionIndex));
   } else if (topicCategory === 'health-fitness') {
     visuals.push(...generateHealthFitnessVisuals(heading, sectionIndex));
