@@ -1,119 +1,16 @@
-
 import React from 'react';
 import { ContentGenerationOptions } from './types';
-import { createTitleFromKeywords, slugify } from './helpers';
-import { determineTopicCategory } from './topicCategories';
-import { generateOnlineIncomeContent } from './generators/onlineIncomeGenerator';
-import { generateHealthContent } from './generators/healthContentGenerator';
-import { generateBusinessContent } from './generators/businessContentGenerator';
-import { generateTechnologyContent } from './generators/technologyContentGenerator';
-import { generateGenericContent } from './generators/genericContentGenerator';
-import { researchSERPs } from '../../services/serpResearchService';
-import { generateEnhancedVisuals, formatEnhancedVisualsForMarkdown } from './generators/enhancedVisualGenerator';
+import { generateEnhancedSEOContent } from './enhancedContentGenerator';
 
 /**
  * Enhanced content generator with human-focused SEO optimization
- * Fixes keyword stuffing, improves content quality, and ensures uniqueness
+ * Now uses comprehensive research and quality validation
  */
 export const generateSEOContent = async (options: ContentGenerationOptions): Promise<string> => {
-  const { 
-    researchData, 
-    targetKeywords, 
-    articleLength, 
-    tone, 
-    includeImages, 
-    includeFAQs,
-    seoLevel = 80,
-    targetAudience = '',
-    contentSpecificity = 70,
-    includeExamples = true,
-    includeStatistics = true,
-    useCaseStudies = true
-  } = options;
-
-  const numericArticleLength = typeof articleLength === 'string' 
-    ? parseInt(articleLength, 10) 
-    : articleLength;
-
-  const keywordsList = targetKeywords.split(',').map(k => k.trim());
-  const primaryKeyword = keywordsList[0] || '';
+  console.log('🚀 Using enhanced content generation system');
   
-  console.log('🚀 Starting enhanced content generation:', { 
-    primaryKeyword, 
-    includeImages, 
-    seoLevel,
-    hasResearchData: !!researchData,
-    targetLength: numericArticleLength
-  });
-  
-  // Research SERPs for real data
-  const serpData = await researchSERPs(primaryKeyword);
-  
-  // Create semantic keyword variations to prevent stuffing (max 5 variations)
-  const semanticKeywords = generateSemanticKeywords(primaryKeyword).slice(0, 5);
-  
-  // Combine user research with SERP data
-  const enhancedResearchData = researchData 
-    ? `${researchData}\n\nSERP RESEARCH DATA:\n${serpData.authorityContent}`
-    : serpData.authorityContent;
-  
-  const topicCategory = determineTopicCategory(primaryKeyword);
-  
-  // Enhanced content generation options
-  const enhancedOptions = {
-    primaryKeyword,
-    semanticKeywords,
-    serpData,
-    researchData: enhancedResearchData,
-    articleLength: numericArticleLength,
-    tone,
-    includeImages,
-    includeFAQs,
-    topicCategory,
-    targetAudience,
-    contentSpecificity,
-    includeExamples,
-    includeStatistics,
-    useCaseStudies
-  };
-  
-  // Use topic-specific generators for better content quality
-  let content = "";
-  
-  switch (topicCategory) {
-    case 'online-income':
-      content = await generateOnlineIncomeContent(enhancedOptions);
-      break;
-      
-    case 'health-fitness':
-    case 'nutrition':
-    case 'medical':
-      content = await generateHealthContent(enhancedOptions);
-      break;
-      
-    case 'business':
-    case 'marketing':
-      content = await generateBusinessContent(enhancedOptions);
-      break;
-      
-    case 'technology':
-      content = await generateTechnologyContent(enhancedOptions);
-      break;
-      
-    default:
-      content = await generateGenericContent(enhancedOptions);
-      break;
-  }
-  
-  // Ensure minimum length is met
-  if (content.length < numericArticleLength * 4) { // Assuming ~4 chars per word
-    console.log('Content too short, expanding...');
-    content = await expandContent(content, enhancedOptions, numericArticleLength, topicCategory);
-  }
-  
-  console.log(`✅ Content generation completed: ${content.length} characters (target: ${numericArticleLength * 4})`);
-  
-  return content;
+  // Use the new enhanced generator
+  return await generateEnhancedSEOContent(options);
 };
 
 /**

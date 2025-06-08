@@ -1,6 +1,6 @@
-
 import { slugify } from '../helpers';
 import { generateOnlineIncomeVisuals } from './onlineIncomeVisuals';
+import { generateRelevantVisuals, formatAdvancedVisualsForMarkdown, HighQualityVisual } from './enhancedImageService';
 
 export interface EnhancedVisualContent {
   type: 'hero-image' | 'infographic' | 'chart' | 'diagram' | 'medical-illustration' | 'comparison-table' | 'timeline' | 'anatomy-diagram';
@@ -125,43 +125,30 @@ export function generateEnhancedVisuals(
   heading: string,
   primaryKeyword: string,
   topicCategory: string,
-  sectionIndex: number
+  sectionIndex: number,
+  contentContext: string = ''
 ): EnhancedVisualContent[] {
-  const visuals: EnhancedVisualContent[] = [];
+  console.log('🎨 Generating enhanced visuals with new service for:', { heading, primaryKeyword, topicCategory });
   
-  console.log('Generating visuals for:', { heading, primaryKeyword, topicCategory, sectionIndex });
+  // Use the new enhanced image service
+  const highQualityVisuals = generateRelevantVisuals(heading, primaryKeyword, topicCategory, sectionIndex, contentContext);
   
-  // Generate highly relevant topic-specific visuals
-  if (primaryKeyword.toLowerCase().includes('zinc') && primaryKeyword.toLowerCase().includes('foods')) {
-    visuals.push(...generateZincFoodsVisuals(heading, sectionIndex));
-  } else if (primaryKeyword.toLowerCase().includes('vitamin d') && primaryKeyword.toLowerCase().includes('deficiency')) {
-    visuals.push(...generateVitaminDVisuals(heading, sectionIndex));
-  } else if (topicCategory === 'online-income') {
-    visuals.push(...generateOnlineIncomeVisuals(heading, primaryKeyword, sectionIndex));
-  } else if (topicCategory === 'health-fitness') {
-    visuals.push(...generateHealthFitnessVisuals(heading, sectionIndex));
-  } else {
-    visuals.push(...generateGenericVisuals(heading, primaryKeyword, sectionIndex));
-  }
+  // Convert to existing format for compatibility
+  const enhancedVisuals: EnhancedVisualContent[] = highQualityVisuals.map(visual => ({
+    type: visual.type as any,
+    title: visual.title,
+    description: visual.description,
+    altText: visual.altText,
+    caption: visual.caption,
+    placement: visual.placement as any,
+    imageUrl: visual.imageUrl,
+    chartData: visual.chartData,
+    chartType: visual.chartType,
+    relevanceScore: visual.relevanceScore
+  }));
   
-  // Add data visualizations for statistical sections
-  if (shouldHaveInfographic(heading)) {
-    visuals.push(generateTopicSpecificInfographic(heading, primaryKeyword, sectionIndex));
-  }
-  
-  // Add charts for quantitative sections
-  if (shouldHaveChart(heading)) {
-    visuals.push(generateTopicSpecificChart(heading, primaryKeyword, sectionIndex));
-  }
-  
-  // Ensure at least one highly relevant visual
-  if (visuals.length === 0) {
-    console.log('No visuals generated, adding guaranteed fallback');
-    visuals.push(generateFallbackVisual(heading, primaryKeyword));
-  }
-  
-  console.log('Final visuals count:', visuals.length, 'for heading:', heading);
-  return visuals.sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 2); // Return top 2 most relevant visuals
+  console.log(`✅ Generated ${enhancedVisuals.length} high-quality visuals`);
+  return enhancedVisuals;
 }
 
 function generateZincFoodsVisuals(heading: string, sectionIndex: number): EnhancedVisualContent[] {
@@ -292,8 +279,8 @@ function generateGenericVisuals(heading: string, keyword: string, sectionIndex: 
     type: 'hero-image',
     title: `${heading} - ${selectedImage.title}`,
     description: `Professional guidance for ${heading.toLowerCase()}`,
-    altText: `Professional approach to ${heading.toLowerCase()}`,
-    caption: `📊 Expert Guidance: ${heading} with evidence-based strategies`,
+    altText: `Professional illustration for ${heading.toLowerCase()}`,
+    caption: `🎯 Expert Insights: ${heading} with professional guidance`,
     placement: 'inline',
     imageUrl: selectedImage.url,
     relevanceScore: 75
@@ -432,43 +419,24 @@ function shouldHaveChart(heading: string): boolean {
 
 export function formatEnhancedVisualsForMarkdown(visuals: EnhancedVisualContent[]): string {
   if (!visuals || visuals.length === 0) {
-    console.log('No visuals to format');
     return '';
   }
 
-  console.log('Formatting', visuals.length, 'visuals for markdown');
+  // Convert to HighQualityVisual format and use advanced formatter
+  const highQualityVisuals: HighQualityVisual[] = visuals.map(visual => ({
+    type: visual.type as any,
+    title: visual.title,
+    description: visual.description,
+    altText: visual.altText,
+    caption: visual.caption,
+    placement: visual.placement as any,
+    imageUrl: visual.imageUrl || '',
+    chartData: visual.chartData,
+    chartType: visual.chartType,
+    relevanceScore: visual.relevanceScore,
+    keywords: [],
+    contextualInfo: visual.description
+  }));
 
-  return visuals.map((visual, index) => {
-    let formattedContent = '';
-    
-    // Always include the image if available
-    if (visual.imageUrl) {
-      formattedContent += `![${visual.altText}](${visual.imageUrl})\n\n`;
-      formattedContent += `**${visual.title}**\n\n`;
-      formattedContent += `*${visual.caption}*\n\n`;
-    }
-    
-    // Add infographic data if available
-    if (visual.type === 'infographic' && visual.chartData && visual.chartData.statistics) {
-      formattedContent += `### 📊 Key Statistics\n\n`;
-      formattedContent += `| Metric | Value | Context |\n`;
-      formattedContent += `|--------|--------|----------|\n`;
-      
-      visual.chartData.statistics.forEach((stat: any) => {
-        formattedContent += `| ${stat.label} | **${stat.value}** | ${stat.context} |\n`;
-      });
-      
-      formattedContent += `\n> 📊 **Research-Based Data**: Statistics compiled from peer-reviewed studies and health organizations.\n\n`;
-    }
-    
-    // Add chart visualization if available
-    if (visual.type === 'chart' && visual.chartData) {
-      formattedContent += `### 📈 Data Visualization\n\n`;
-      formattedContent += `> **Chart Type**: ${visual.chartType}\n`;
-      formattedContent += `> **Data Source**: Clinical research and nutritional databases\n`;
-      formattedContent += `> **Purpose**: ${visual.description}\n\n`;
-    }
-    
-    return formattedContent;
-  }).join('---\n\n');
+  return formatAdvancedVisualsForMarkdown(highQualityVisuals);
 }
