@@ -2,7 +2,7 @@
 import { ContentGenerationOptions } from './types';
 import { generateHealthContentWithVariation } from './generators/healthContentGenerator';
 import { generateBusinessContentWithVariation } from './generators/businessContentGenerator';
-import { generateTechnologyContentWithVariation } from './generators/technologyContentGenerator';
+import { generateTechnologyContent } from './generators/technologyContentGenerator';
 import { generateNaturalLanguageVariations } from './generators/naturalLanguageGenerator';
 import { fillContentGaps } from './generators/contentGapFiller';
 import { slugify } from './helpers';
@@ -14,7 +14,7 @@ import { slugify } from './helpers';
 export const generateEnhancedSEOContent = async (options: ContentGenerationOptions): Promise<string> => {
   console.log('🚀 Generating enhanced, non-repetitive content');
   
-  const keywords = options.keywords.split(',').map(k => k.trim());
+  const keywords = options.targetKeywords.split(',').map(k => k.trim());
   const primaryKeyword = keywords[0];
   const topicCategory = determineTopicCategory(primaryKeyword);
   
@@ -49,7 +49,7 @@ export const generateEnhancedSEOContent = async (options: ContentGenerationOptio
     
     case 'technology':
     case 'programming':
-      return await generateTechnologyContentWithVariation(contentOptions);
+      return await generateTechnologyContent(contentOptions);
     
     default:
       return await generateGeneralContentWithVariation(contentOptions);
