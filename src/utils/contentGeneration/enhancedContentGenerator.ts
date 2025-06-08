@@ -1,6 +1,3 @@
-import { generateEnhancedTitle, generateEnhancedTakeaways, generateEnhancedIntroduction, generateEnhancedHeadings, generateEnhancedVisuals, generateEnhancedFAQs, generateUniqueConclusion } from './generators/enhancedContentHelpers';
-import { formatEnhancedVisualsForMarkdown } from './generators/enhancedVisualGenerator';
-import { slugify } from '../helpers';
 
 import { generateSectionSpecificContent, determineSectionType } from './generators/sectionSpecificGenerator';
 import { generateMedicalReviewerBox, generateReferencesSection, generateDetailedAuthorSection, addInlineCitations, hyperlinkStudyMentions } from './generators/eatSignalsGenerator';
@@ -106,13 +103,9 @@ export async function generateEnhancedContent(options: ContentGenerationOptions)
     
     content += sectionContent + '\n\n';
     
-    // Add enhanced visual content
+    // Add enhanced visual content (placeholder for future implementation)
     if (includeImages && i < 3) {
-      const visuals = generateEnhancedVisuals(heading, primaryKeyword, 'health-fitness', i);
-      const visualsMarkdown = formatEnhancedVisualsForMarkdown(visuals);
-      if (visualsMarkdown) {
-        content += visualsMarkdown + '\n\n';
-      }
+      content += `*[Visual content placeholder for: ${heading}]*\n\n`;
     }
     
     if (i < headings.length - 1) {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ContentGenerationOptions } from './types';
-import { generateEnhancedSEOContent } from './enhancedContentGenerator';
+import { generateEnhancedContent } from './enhancedContentGenerator';
 
 /**
  * Enhanced content generator with human-focused SEO optimization
@@ -10,7 +10,7 @@ export const generateSEOContent = async (options: ContentGenerationOptions): Pro
   console.log('🚀 Using enhanced content generation system');
   
   // Use the new enhanced generator
-  return await generateEnhancedSEOContent(options);
+  return await generateEnhancedContent(options);
 };
 
 /**
@@ -175,3 +175,5 @@ function generateSemanticKeywords(primaryKeyword: string): string[] {
   
   return semanticVariations.slice(0, 5); // Limit to 5 to prevent over-optimization
 }
+
+export { generateEnhancedContent };
