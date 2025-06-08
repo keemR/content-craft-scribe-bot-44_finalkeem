@@ -4,8 +4,6 @@
 
 import { simulateApiCall } from './api';
 import { generateSEOContent } from './contentGenerator';
-import { orchestrateContentGeneration } from './contentOrchestrator';
-import { ContentConfiguration } from './contentConfiguration';
 import { determineTopicCategory } from './topicCategories';
 import { ContentGenerationOptions } from './types';
 
@@ -13,8 +11,6 @@ import { ContentGenerationOptions } from './types';
 export {
   simulateApiCall,
   generateSEOContent,
-  orchestrateContentGeneration,
-  ContentConfiguration,
   determineTopicCategory
 };
 
