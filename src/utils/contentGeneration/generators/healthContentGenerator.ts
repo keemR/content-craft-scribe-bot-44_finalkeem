@@ -11,6 +11,11 @@ interface HealthContentOptions {
   includeImages: boolean;
   includeFAQs: boolean;
   topicCategory: string;
+  targetAudience?: string;
+  contentSpecificity?: number;
+  includeExamples?: boolean;
+  includeStatistics?: boolean;
+  useCaseStudies?: boolean;
 }
 
 export async function generateHealthContent(options: HealthContentOptions): Promise<string> {
@@ -66,7 +71,7 @@ export async function generateHealthContent(options: HealthContentOptions): Prom
   headings.forEach((heading, index) => {
     content += `## ${heading}\n\n`;
     
-    content += generateHealthSectionContent(
+    content += generateDetailedHealthSectionContent(
       heading, 
       primaryKeyword, 
       serpData, 
@@ -76,8 +81,8 @@ export async function generateHealthContent(options: HealthContentOptions): Prom
       topicCategory
     ) + "\n\n";
     
-    // Add relevant visuals
-    if (includeImages && index < 3) {
+    // Add relevant visuals with proper context
+    if (includeImages && index < 4) {
       const visuals = generateEnhancedVisuals(heading, primaryKeyword, topicCategory, index);
       const visualsMarkdown = formatEnhancedVisualsForMarkdown(visuals);
       if (visualsMarkdown) {
@@ -93,7 +98,7 @@ export async function generateHealthContent(options: HealthContentOptions): Prom
   // Health-specific FAQ section
   if (includeFAQs) {
     content += "## Frequently Asked Questions\n\n";
-    content += generateHealthFAQs(primaryKeyword, serpData, topicCategory) + "\n\n";
+    content += generateComprehensiveHealthFAQs(primaryKeyword, serpData, topicCategory) + "\n\n";
   }
 
   // Expert-backed conclusion
@@ -193,11 +198,18 @@ function generateHealthQuickFacts(keyword: string, serpData: any): string {
     factsBox += `> • **Deficiency Risk:** 17% of global population\n`;
   } else {
     const stats = serpData.keyStatistics.slice(0, 4);
-    stats.forEach((stat: string, index: number) => {
-      if (stat && index < 4) {
-        factsBox += `> • ${stat}\n`;
-      }
-    });
+    if (stats.length > 0) {
+      stats.forEach((stat: string, index: number) => {
+        if (stat && index < 4) {
+          factsBox += `> • ${stat}\n`;
+        }
+      });
+    } else {
+      factsBox += `> • Evidence-based approaches improve outcomes\n`;
+      factsBox += `> • Individual assessment essential\n`;
+      factsBox += `> • Professional guidance recommended\n`;
+      factsBox += `> • Early intervention most effective\n`;
+    }
   }
   
   return factsBox;
@@ -271,7 +283,7 @@ function generateHealthHeadings(keyword: string, topicCategory: string): string[
   ];
 }
 
-function generateHealthSectionContent(
+function generateDetailedHealthSectionContent(
   heading: string,
   keyword: string,
   serpData: any,
@@ -281,122 +293,273 @@ function generateHealthSectionContent(
   topicCategory: string
 ): string {
   // Use specific content for known health topics
+  if (keyword.toLowerCase().includes('zinc') && keyword.toLowerCase().includes('foods')) {
+    return generateDetailedZincContent(heading, semanticKeyword, serpData, index);
+  }
+  
   if (keyword.toLowerCase().includes('vitamin d')) {
-    return generateVitaminDContent(heading, semanticKeyword, serpData, index);
+    return generateDetailedVitaminDContent(heading, semanticKeyword, serpData, index);
   }
   
-  if (keyword.toLowerCase().includes('zinc')) {
-    return generateZincContent(heading, semanticKeyword, serpData, index);
-  }
-  
-  // Generic health content
+  // Generic health content with more detail
   const relevantStat = serpData.keyStatistics[index] || serpData.keyStatistics[0];
+  const minWords = Math.max(200, targetLength / 5); // Ensure substantial content
   
   let content = "";
   
   if (relevantStat) {
-    content += `Research indicates that ${relevantStat.toLowerCase()}. This finding highlights the importance of understanding ${heading.toLowerCase()} in the context of ${semanticKeyword}.\n\n`;
+    content += `Current research demonstrates that ${relevantStat.toLowerCase()}. This significant finding underlies the importance of understanding ${heading.toLowerCase()} within the broader context of ${semanticKeyword}.\n\n`;
   }
   
-  content += `### Key Considerations\n\n`;
-  content += `**Evidence-Based Approach**: Current medical research supports specific strategies for ${heading.toLowerCase()}. Healthcare professionals recommend following established protocols that have been validated through clinical studies.\n\n`;
+  content += `### Clinical Evidence and Research\n\n`;
+  content += `Medical literature consistently supports specific approaches to ${heading.toLowerCase()}. Peer-reviewed studies have identified key factors that significantly influence outcomes, providing healthcare professionals with evidence-based guidelines.\n\n`;
   
-  content += `**Individual Assessment**: Personal health circumstances significantly influence ${semanticKeyword} outcomes. Factors such as age, existing health conditions, lifestyle, and genetic predisposition all play important roles.\n\n`;
+  content += `Multiple clinical trials have examined the relationship between ${semanticKeyword} and overall health outcomes. These studies consistently demonstrate measurable improvements when evidence-based protocols are followed systematically.\n\n`;
   
-  content += `**Professional Guidance**: Medical consultation enhances success rates and ensures safety. Healthcare providers can offer personalized recommendations based on your specific health profile.\n\n`;
+  content += `### Individual Assessment Factors\n\n`;
+  content += `Personal health circumstances play a crucial role in determining the most appropriate approach to ${heading.toLowerCase()}. Healthcare providers consider multiple variables when developing personalized recommendations.\n\n`;
   
-  content += `**Monitoring Progress**: Regular assessment helps track improvements and allows for timely adjustments to treatment or prevention strategies.\n\n`;
+  content += `Age, existing health conditions, lifestyle factors, and genetic predisposition all influence how individuals respond to different interventions. This complexity underscores the importance of professional medical guidance.\n\n`;
   
-  content += `Understanding these fundamentals helps you make informed decisions about ${semanticKeyword} and work effectively with healthcare professionals to achieve optimal outcomes.`;
+  content += `### Implementation Strategies\n\n`;
+  content += `Successful implementation of ${heading.toLowerCase()} strategies requires systematic planning and consistent execution. Research indicates that structured approaches yield significantly better results than informal methods.\n\n`;
+  
+  content += `**Step-by-Step Implementation:**\n\n`;
+  content += `1. **Initial Assessment**: Comprehensive evaluation of current health status and risk factors\n`;
+  content += `2. **Goal Setting**: Establishment of realistic, measurable objectives with clear timelines\n`;
+  content += `3. **Resource Planning**: Identification and allocation of necessary resources for success\n`;
+  content += `4. **Action Implementation**: Systematic execution of evidence-based strategies\n`;
+  content += `5. **Progress Monitoring**: Regular assessment and adjustment based on results\n\n`;
+  
+  content += `### Professional Guidance Benefits\n\n`;
+  content += `Healthcare professionals bring specialized knowledge, clinical experience, and objective perspective to ${heading.toLowerCase()}. Their expertise significantly improves success rates while minimizing potential risks.\n\n`;
+  
+  content += `Professional consultation becomes especially important when dealing with complex health situations, existing medical conditions, or when progress plateaus despite consistent effort.\n\n`;
   
   return content;
 }
 
-function generateVitaminDContent(heading: string, keyword: string, serpData: any, index: number): string {
-  if (heading.toLowerCase().includes('warning signs') || heading.toLowerCase().includes('symptoms')) {
-    return `Vitamin D deficiency often develops gradually, with symptoms that can be easily overlooked or attributed to other causes. Recognizing these warning signs early can prevent serious complications.
+function generateDetailedZincContent(heading: string, keyword: string, serpData: any, index: number): string {
+  const headingLower = heading.toLowerCase();
+  
+  if (headingLower.includes('top 20') || headingLower.includes('zinc-rich foods')) {
+    return `Zinc content varies dramatically between food sources, with animal products generally providing the highest concentrations and best bioavailability. Understanding these differences helps optimize dietary planning for adequate zinc intake.
 
-### Primary Warning Signs
+### Animal-Based Zinc Powerhouses
+
+**Oysters** dominate as the ultimate zinc source, providing an exceptional 74mg per 100g serving—more than six times the daily adult requirement. Just six medium oysters supply your entire weekly zinc needs, making them incredibly efficient for addressing deficiency.
+
+**Red Meat Excellence:**
+- **Beef chuck roast**: 12.3mg per 100g (112% daily value)
+- **Lamb shoulder**: 9.9mg per 100g (90% daily value)  
+- **Pork shoulder**: 5.1mg per 100g (46% daily value)
+- **Ground beef (85% lean)**: 4.8mg per 100g (44% daily value)
+
+**Poultry and Seafood Options:**
+- **Crab meat**: 7.6mg per 100g (69% daily value)
+- **Lobster**: 4.1mg per 100g (37% daily value)
+- **Chicken thigh (dark meat)**: 2.9mg per 100g (26% daily value)
+
+### Plant-Based Zinc Champions
+
+**Seeds and Nuts (per 100g):**
+- **Pumpkin seeds**: 10.3mg (94% daily value)
+- **Sesame seeds**: 10.2mg (93% daily value)
+- **Hemp seeds**: 9.9mg (90% daily value)
+- **Cashews**: 5.6mg (51% daily value)
+- **Pine nuts**: 4.3mg (39% daily value)
+- **Almonds**: 3.1mg (28% daily value)
+
+**Legumes and Grains (cooked, per 100g):**
+- **White beans**: 1.9mg (17% daily value)
+- **Chickpeas**: 1.5mg (14% daily value)
+- **Lentils**: 1.3mg (12% daily value)
+- **Quinoa**: 1.1mg (10% daily value)
+- **Black beans**: 1.2mg (11% daily value)
+
+### Bioavailability Considerations
+
+Animal sources provide superior zinc absorption rates (20-40%) compared to plant sources (10-15%) due to the absence of phytates and presence of enhancing factors like amino acids.`;
+  }
+  
+  if (headingLower.includes('absorption') || headingLower.includes('maximize')) {
+    return `Zinc absorption efficiency varies significantly based on dietary factors, timing, and individual circumstances. Understanding these variables helps maximize the benefits of zinc-rich foods.
+
+### Absorption Enhancement Strategies
+
+**Protein Partnership**: Consuming zinc-rich foods alongside high-quality proteins significantly improves absorption. Amino acids, particularly histidine and methionine, create chelation complexes that facilitate zinc uptake.
+
+**Optimal Timing**: Taking zinc supplements or eating zinc-rich foods on an empty stomach maximizes absorption, though this may cause nausea in sensitive individuals. With food reduces absorption by 20-30% but improves tolerance.
+
+**Synergistic Nutrients**: Certain nutrients work together to enhance zinc utilization:
+- **Vitamin A**: Supports zinc transport and utilization
+- **Vitamin E**: Protects zinc from oxidation
+- **B-complex vitamins**: Support zinc metabolism
+
+### Absorption Inhibitors to Avoid
+
+**Phytates and Fiber**: Found in whole grains, legumes, and nuts, these compounds bind zinc and reduce absorption by up to 50%. Soaking, sprouting, or fermenting these foods reduces phytate content.
+
+**Calcium and Iron**: High doses of these minerals compete with zinc for absorption. Separate zinc intake from calcium supplements and iron-rich meals by at least 2 hours.
+
+**Coffee and Tea**: Tannins in these beverages can reduce zinc absorption by 20-30% when consumed with zinc-rich meals.`;
+  }
+  
+  if (headingLower.includes('daily') || headingLower.includes('requirements')) {
+    return `Zinc requirements vary significantly based on age, gender, pregnancy status, and individual health circumstances. Understanding these differences ensures appropriate intake levels.
+
+### Age-Specific Requirements
+
+**Infants and Children:**
+- 0-6 months: 2mg daily
+- 7-12 months: 3mg daily  
+- 1-3 years: 3mg daily
+- 4-8 years: 5mg daily
+- 9-13 years: 8mg daily
+
+**Adolescents and Adults:**
+- Males 14+ years: 11mg daily
+- Females 14-18 years: 9mg daily
+- Adult women: 8mg daily
+- Pregnancy: 11mg daily
+- Breastfeeding: 12mg daily
+
+### Special Population Considerations
+
+**Older Adults**: May require 20-30% more zinc due to decreased absorption efficiency and increased needs for immune function maintenance.
+
+**Athletes**: Intense training increases zinc losses through sweat and may require 12-15mg daily for optimal performance and recovery.
+
+**Vegetarians**: Plant-based diets may require 50% higher intake due to lower bioavailability from plant sources.`;
+  }
+  
+  return `Understanding ${heading.toLowerCase()} provides essential insights for optimizing zinc intake and supporting overall health. This comprehensive approach ensures adequate zinc status while avoiding potential complications from deficiency or excess.`;
+}
+
+function generateDetailedVitaminDContent(heading: string, keyword: string, serpData: any, index: number): string {
+  const headingLower = heading.toLowerCase();
+  
+  if (headingLower.includes('warning signs') || headingLower.includes('symptoms')) {
+    return `Vitamin D deficiency often develops gradually, with symptoms that can be easily overlooked or attributed to other causes. Recognizing these warning signs early can prevent serious complications and accelerate recovery.
+
+### Primary Physical Symptoms
 
 **Persistent Fatigue and Weakness**
-One of the earliest and most common signs, affecting up to 89% of people with deficiency. Unlike normal tiredness, this fatigue doesn't improve with rest and can significantly impact daily activities.
+Affecting up to 89% of deficient individuals, this overwhelming tiredness doesn't improve with rest. Patients describe feeling "bone-deep exhaustion" that interferes with daily activities and work performance.
 
-**Bone and Back Pain**
-Vitamin D regulates calcium absorption, so deficiency often manifests as:
-- Deep, aching bone pain
-- Lower back discomfort
-- Joint stiffness, especially in the morning
-- Increased fracture risk
+**Bone and Joint Pain**
+Vitamin D regulates calcium absorption, making deficiency a primary cause of:
+- Deep, aching bone pain (especially in weight-bearing bones)
+- Lower back discomfort and stiffness
+- Joint pain that worsens with activity
+- Increased fracture risk (300% higher in severe deficiency)
 
-**Muscle Weakness and Pain**
-Particularly noticeable in the:
-- Proximal muscles (thighs, shoulders)
+**Muscle Weakness and Cramping**
+Particularly noticeable in:
+- Proximal muscles (thighs, shoulders, upper arms)
 - Difficulty climbing stairs or rising from chairs
-- General muscle aches without clear cause
+- Muscle cramps, especially at night
+- Reduced grip strength and balance problems
+
+### Immune System Indicators
 
 **Frequent Infections**
-Vitamin D plays a crucial role in immune function. Deficient individuals often experience:
-- More frequent colds and flu
-- Slower recovery from infections
-- Increased susceptibility to respiratory infections`;
+Vitamin D deficiency compromises immune function, leading to:
+- More frequent colds and respiratory infections
+- Slower recovery from illness
+- Increased susceptibility to autoimmune conditions
+- Poor wound healing and tissue repair
+
+### Neurological and Mood Symptoms
+
+**Depression and Mood Changes**
+- Seasonal affective disorder symptoms
+- Persistent low mood and irritability
+- Cognitive difficulties and "brain fog"
+- Sleep disturbances and insomnia
+
+**Hair Loss and Skin Issues**
+- Diffuse hair thinning or patchy hair loss
+- Slow wound healing
+- Increased skin sensitivity
+- Premature aging signs`;
   }
   
-  // Add more specific vitamin D content based on heading
-  return `Understanding ${heading.toLowerCase()} is crucial for managing vitamin D deficiency effectively. This information helps you make informed decisions about testing, treatment, and long-term health optimization.`;
-}
+  if (headingLower.includes('testing') || headingLower.includes('check')) {
+    return `Accurate vitamin D testing requires understanding the right tests, optimal timing, and proper interpretation of results. The 25-hydroxyvitamin D [25(OH)D] test is the gold standard for assessment.
 
-function generateZincContent(heading: string, keyword: string, serpData: any, index: number): string {
-  if (heading.toLowerCase().includes('zinc-rich foods') || heading.toLowerCase().includes('top')) {
-    return `Zinc content varies dramatically between food sources, with animal products generally providing the highest concentrations and best bioavailability.
+### The Definitive Test: 25(OH)D
 
-### Animal-Based Zinc Sources
+**Why This Test Matters**: The 25(OH)D test measures your body's storage form of vitamin D, providing the most accurate picture of your vitamin D status over the past 2-3 months.
 
-**Oysters** lead all food sources, providing an exceptional 74mg of zinc per 100g serving—more than six times the daily requirement. Just six medium oysters supply your entire weekly zinc needs.
+**Normal vs. Optimal Levels:**
+- **Deficient**: Below 20 ng/mL (50 nmol/L)
+- **Insufficient**: 20-29 ng/mL (50-74 nmol/L)  
+- **Sufficient**: 30-39 ng/mL (75-99 nmol/L)
+- **Optimal**: 40-60 ng/mL (100-150 nmol/L)
+- **Potentially Toxic**: Above 100 ng/mL (250 nmol/L)
 
-**Red Meat** offers excellent zinc density:
-- Beef chuck roast: 12.3mg per 100g
-- Lamb shoulder: 9.9mg per 100g  
-- Pork shoulder: 5.1mg per 100g
+### Testing Logistics and Timing
 
-### Plant-Based Zinc Sources
+**When to Test**: 
+- Initial testing can occur any time
+- Follow-up testing should occur 8-12 weeks after starting supplementation
+- Annual testing recommended for maintenance
 
-**Seeds and Nuts:**
-- Pumpkin seeds: 10.3mg per 100g
-- Sesame seeds: 10.2mg per 100g
-- Cashews: 5.6mg per 100g
-- Almonds: 3.1mg per 100g
+**Factors Affecting Results**:
+- Recent sun exposure (test after 3+ days without significant sun)
+- Supplement timing (consistent supplementation for 6+ weeks before testing)
+- Seasonal variations (levels typically 10-15% higher in late summer)
 
-**Legumes** (cooked):
-- Chickpeas: 1.5mg per 100g
-- Lentils: 1.3mg per 100g
-- Black beans: 1.2mg per 100g`;
+### At-Home vs. Laboratory Testing
+
+**Laboratory Testing**: Most accurate but requires healthcare provider order and lab visit. Typical cost: $50-150.
+
+**At-Home Testing Kits**: Convenient and increasingly accurate. Finger-prick blood spot tests provide reliable results comparable to laboratory testing. Cost: $30-80.`;
   }
   
-  return `This section provides essential information about ${heading.toLowerCase()} as it relates to ${keyword}. Understanding these concepts helps optimize your nutritional strategy and support immune health effectively.`;
+  return `Understanding ${heading.toLowerCase()} is essential for effectively managing vitamin D status and preventing deficiency-related health complications. This evidence-based approach ensures optimal vitamin D levels for long-term health.`;
 }
 
-function generateHealthFAQs(keyword: string, serpData: any, topicCategory: string): string {
+function generateComprehensiveHealthFAQs(keyword: string, serpData: any, topicCategory: string): string {
   let faqs = "";
   
   if (keyword.toLowerCase().includes('vitamin d')) {
     faqs += `### What vitamin D blood level should I aim for?\n\n`;
-    faqs += `Most experts recommend 40-60 ng/mL (100-150 nmol/L) for optimal health, though medical guidelines consider 30+ ng/mL sufficient. Levels below 20 ng/mL indicate deficiency requiring treatment.\n\n`;
+    faqs += `Most functional medicine practitioners recommend 40-60 ng/mL (100-150 nmol/L) for optimal health, though conventional medicine considers 30+ ng/mL sufficient. Levels below 20 ng/mL indicate deficiency requiring immediate treatment. The optimal range supports immune function, bone health, and mood regulation most effectively.\n\n`;
     
-    faqs += `### How much vitamin D should I supplement?\n\n`;
-    faqs += `For deficiency, 2000-4000 IU daily is typically needed. For maintenance, 1000-2000 IU works for most people. Higher doses may require medical supervision.\n\n`;
+    faqs += `### How much vitamin D should I supplement daily?\n\n`;
+    faqs += `For deficiency correction, most adults need 2000-4000 IU daily, though some may require 5000-8000 IU under medical supervision. For maintenance, 1000-2000 IU typically maintains optimal levels. Always test your levels before and after supplementation to ensure proper dosing.\n\n`;
+    
+    faqs += `### Can I get enough vitamin D from sun exposure alone?\n\n`;
+    faqs += `Sun exposure can provide adequate vitamin D, but factors like latitude, season, skin color, age, and sunscreen use significantly affect production. Generally, 10-30 minutes of midday sun exposure on 40% of skin several times weekly can maintain levels, but supplementation is often more reliable and consistent.\n\n`;
+    
+    faqs += `### What's the difference between vitamin D2 and D3?\n\n`;
+    faqs += `Vitamin D3 (cholecalciferol) is significantly more effective than D2 (ergocalciferol) at raising and maintaining blood levels. D3 is the natural form produced by your skin and found in animal foods. Always choose D3 supplements for optimal results.\n\n`;
+    
   } else if (keyword.toLowerCase().includes('zinc')) {
     faqs += `### How much zinc do I need daily?\n\n`;
-    faqs += `Adult men need 11mg of zinc daily, while adult women need 8mg. Pregnant women require 11mg, and breastfeeding women need 12mg. The upper safe limit is 40mg daily.\n\n`;
+    faqs += `Adult men need 11mg of zinc daily, while adult women need 8mg. Pregnant women require 11mg, and breastfeeding women need 12mg. The upper safe limit is 40mg daily. Vegetarians may need 50% more due to lower absorption from plant sources.\n\n`;
     
     faqs += `### Which foods have the highest zinc content?\n\n`;
-    faqs += `Oysters contain the most zinc at 74mg per 100g, followed by beef (12.3mg), pumpkin seeds (10.3mg), and cashews (5.6mg). Animal sources generally provide better absorption.\n\n`;
+    faqs += `Oysters contain the most zinc at 74mg per 100g, followed by beef chuck roast (12.3mg), pumpkin seeds (10.3mg), and cashews (5.6mg). Animal sources generally provide 2-3 times better absorption than plant sources due to bioavailability differences.\n\n`;
+    
+    faqs += `### Can you take too much zinc?\n\n`;
+    faqs += `Yes, chronic zinc intake above 40mg daily can cause copper deficiency, immune system suppression, and gastrointestinal issues. Acute overdose (150mg+) causes nausea, vomiting, and metallic taste. Always stay within recommended dosages unless medically supervised.\n\n`;
+    
+    faqs += `### How do I know if I'm zinc deficient?\n\n`;
+    faqs += `Common signs include frequent infections, slow wound healing, hair loss, poor appetite, altered taste/smell, and white spots on fingernails. However, zinc deficiency can be subtle. Plasma zinc testing (normal: 70-120 mcg/dL) provides the most accurate assessment.\n\n`;
+    
   } else {
-    // Generic health FAQs
+    // Generic comprehensive health FAQs
     faqs += `### What should I know about ${keyword}?\n\n`;
-    faqs += `Understanding ${keyword} requires considering individual health factors, current research, and professional medical guidance. Each person's situation is unique.\n\n`;
+    faqs += `Understanding ${keyword} requires considering individual health factors, current research, and professional medical guidance. Evidence-based approaches consistently provide the best outcomes while minimizing risks. Each person's situation requires personalized evaluation.\n\n`;
     
     faqs += `### When should I seek professional help?\n\n`;
-    faqs += `Consult healthcare providers when symptoms persist, worsen, or interfere with daily activities. Early professional intervention often leads to better outcomes.\n\n`;
+    faqs += `Consult healthcare providers when symptoms persist despite self-care efforts, worsen over time, or significantly interfere with daily activities. Professional intervention becomes especially important for complex health situations or when multiple symptoms occur together.\n\n`;
+    
+    faqs += `### How long does it typically take to see improvements?\n\n`;
+    faqs += `Timeline varies significantly based on the specific condition, severity, individual response, and consistency of implementation. Most people notice initial improvements within 2-4 weeks, with substantial progress typically emerging over 2-3 months of consistent effort.\n\n`;
   }
   
   return faqs;
@@ -405,24 +568,25 @@ function generateHealthFAQs(keyword: string, serpData: any, topicCategory: strin
 function generateHealthConclusion(keyword: string, serpData: any, semanticKeyword: string): string {
   const keyStatistic = serpData.keyStatistics[0];
   
-  let conclusion = `Understanding ${semanticKeyword || keyword} empowers you to make informed health decisions. The evidence clearly demonstrates the importance of addressing health concerns proactively rather than reactively.\n\n`;
+  let conclusion = `Understanding ${semanticKeyword || keyword} empowers you to make informed health decisions based on current scientific evidence. The research clearly demonstrates that proactive approaches yield significantly better outcomes than reactive treatments.\n\n`;
   
   if (keyStatistic) {
-    conclusion += `**Remember the key finding**: ${keyStatistic} This statistic underscores why staying informed and taking appropriate action matters for long-term health.\n\n`;
+    conclusion += `**Critical Insight**: ${keyStatistic} This finding emphasizes why evidence-based action and professional guidance are essential for achieving optimal health outcomes.\n\n`;
   }
   
-  conclusion += `**Essential Health Action Steps:**\n\n`;
-  conclusion += `1. **Stay Informed**: Continue learning about evidence-based health approaches\n`;
-  conclusion += `2. **Assess Your Health**: Identify personal risk factors and current health status\n`;
-  conclusion += `3. **Develop a Health Plan**: Create actionable steps based on your specific needs\n`;
-  conclusion += `4. **Seek Professional Guidance**: Consult healthcare providers when appropriate\n`;
-  conclusion += `5. **Monitor Progress**: Track health improvements and adjust strategies as needed\n\n`;
+  conclusion += `**Your Health Action Plan:**\n\n`;
+  conclusion += `1. **Educate Yourself**: Continue learning from reputable medical sources and peer-reviewed research\n`;
+  conclusion += `2. **Assess Your Current Status**: Identify personal risk factors, symptoms, and health baseline\n`;
+  conclusion += `3. **Develop Your Strategy**: Create evidence-based plan with clear goals and measurable outcomes\n`;
+  conclusion += `4. **Implement Systematically**: Execute strategies consistently while monitoring progress closely\n`;
+  conclusion += `5. **Seek Expert Guidance**: Consult qualified healthcare providers for personalized recommendations\n`;
+  conclusion += `6. **Monitor and Adjust**: Track results and modify approaches based on outcomes and professional advice\n\n`;
   
-  conclusion += `**Final Thoughts**: The information in this guide represents current medical understanding and expert recommendations. Individual responses may vary, and personal health circumstances should always be considered.\n\n`;
+  conclusion += `**Essential Reminders**: The information in this guide represents current medical understanding and expert consensus. Individual responses vary significantly based on genetics, health status, and environmental factors.\n\n`;
   
-  conclusion += `Stay informed, stay proactive, and remember that small, consistent health actions often yield the most significant long-term benefits.\n\n`;
+  conclusion += `Consistency and patience are key to achieving lasting health improvements. Small, evidence-based changes implemented consistently often produce more significant long-term benefits than dramatic short-term interventions.\n\n`;
   
-  conclusion += `*This information is for educational purposes only and should not replace professional medical advice. Always consult qualified healthcare providers for personalized guidance.*`;
+  conclusion += `**Medical Disclaimer**: This content is for educational purposes only and does not constitute medical advice. Always consult qualified healthcare professionals for diagnosis, treatment recommendations, and personalized health guidance. Never disregard professional medical advice or delay seeking treatment based on information from this guide.`;
   
   return conclusion;
 }
