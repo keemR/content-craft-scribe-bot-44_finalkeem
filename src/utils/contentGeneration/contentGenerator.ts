@@ -1,15 +1,16 @@
+
 import React from 'react';
 import { ContentGenerationOptions } from './types';
 import { generateEnhancedContent } from './enhancedContentGenerator';
 
 /**
  * Enhanced content generator with human-focused SEO optimization
- * Now uses comprehensive research and quality validation
+ * Now uses template-based content generation for different topic categories
  */
 export const generateSEOContent = async (options: ContentGenerationOptions): Promise<string> => {
-  console.log('🚀 Using enhanced content generation system');
+  console.log('🚀 Using enhanced template-based content generation system');
   
-  // Use the new enhanced generator
+  // Use the new enhanced generator with template-based logic
   return await generateEnhancedContent(options);
 };
 
