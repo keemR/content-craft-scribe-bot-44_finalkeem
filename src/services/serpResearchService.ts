@@ -1,3 +1,4 @@
+
 interface SearchResult {
   title: string;
   snippet: string;
@@ -214,6 +215,11 @@ const fetchStatistics = async (keyword: string): Promise<string[]> => {
     ];
   }
   
+  // For health-related topics, use general medical statistics
+  if (isHealthTopic(keyword)) {
+    return getHealthStatistics(keyword);
+  }
+  
   // Generic statistics
   return [
     `Current research shows significant health impacts related to ${keyword}`,
@@ -241,109 +247,6 @@ const isVitaminDTopic = (keyword: string): boolean => {
   const lowerKeyword = keyword.toLowerCase();
   return lowerKeyword.includes('vitamin d') && 
          (lowerKeyword.includes('deficiency') || lowerKeyword.includes('symptom'));
-};
-
-/**
- * Compile authority content from search results
- */
-const compileAuthorityContent = (results: SearchResult[]): string => {
-  return results
-    .map(result => `${result.title}: ${result.snippet}`)
-    .join('\n\n');
-};
-
-/**
- * Extract title from URL
- */
-const extractTitleFromUrl = (url: string): string => {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname.replace('www.', '');
-  } catch {
-    return 'Authority Source';
-  }
-};
-
-/**
- * Enhanced fallback data with topic-specific content
- */
-const getEnhancedFallbackData = (keyword: string): SerpData => {
-  return {
-    topResults: generateFallbackResults(keyword),
-    relatedQuestions: generateTopicSpecificQuestions(keyword),
-    keyStatistics: isZincFoodTopic(keyword) ? 
-      fetchStatistics(keyword).then(stats => stats) as any :
-      isVitaminDTopic(keyword) ?
-      fetchStatistics(keyword).then(stats => stats) as any :
-      ["Research supports evidence-based approaches to " + keyword],
-    authorityContent: `Expert analysis and research-based information about ${keyword}.`
-  };
-};
-
-/**
- * Fetch related questions using a combination of free sources
- */
-const fetchRelatedQuestions = async (keyword: string): Promise<string[]> => {
-  // Generate relevant questions based on the keyword
-  const questions = generateRelevantQuestions(keyword);
-  return questions;
-};
-
-/**
- * Fetch statistics using free APIs and knowledge bases
- */
-const fetchStatistics = async (keyword: string): Promise<string[]> => {
-  try {
-    // For health-related topics, use general medical statistics
-    if (isHealthTopic(keyword)) {
-      return getHealthStatistics(keyword);
-    }
-    
-    // For other topics, generate relevant statistics
-    return generateTopicStatistics(keyword);
-  } catch (error) {
-    console.error('Error fetching statistics:', error);
-    return [];
-  }
-};
-
-/**
- * Generate relevant questions for any topic
- */
-const generateRelevantQuestions = (keyword: string): string[] => {
-  const baseQuestions = [
-    `What are the main ${keyword}?`,
-    `How to identify ${keyword}?`,
-    `What causes ${keyword}?`,
-    `How to prevent ${keyword}?`,
-    `When to see a doctor about ${keyword}?`,
-    `What are the risk factors for ${keyword}?`,
-    `How is ${keyword} diagnosed?`,
-    `What are the treatment options for ${keyword}?`
-  ];
-  
-  // Customize questions based on keyword type
-  if (keyword.toLowerCase().includes('symptom')) {
-    return [
-      ...baseQuestions,
-      `How serious are ${keyword}?`,
-      `Can ${keyword} be reversed?`,
-      `What do ${keyword} look like?`,
-      `How long do ${keyword} last?`
-    ];
-  }
-  
-  if (keyword.toLowerCase().includes('deficiency')) {
-    return [
-      ...baseQuestions,
-      `What foods help with ${keyword}?`,
-      `How long does it take to correct ${keyword}?`,
-      `What supplements are best for ${keyword}?`,
-      `Can ${keyword} be dangerous?`
-    ];
-  }
-  
-  return baseQuestions;
 };
 
 /**
@@ -389,33 +292,36 @@ const getHealthStatistics = (keyword: string): string[] => {
 };
 
 /**
- * Generate topic-specific statistics
+ * Compile authority content from search results
  */
-const generateTopicStatistics = (keyword: string): string[] => {
-  return [
-    `Studies show ${keyword} affects millions globally`,
-    `Research indicates 70% improvement with proper management`,
-    `Expert analysis reveals key factors in ${keyword}`,
-    `Clinical data supports evidence-based approaches`,
-    `Recent surveys show increased awareness of ${keyword}`
-  ];
+const compileAuthorityContent = (results: SearchResult[]): string => {
+  return results
+    .map(result => `${result.title}: ${result.snippet}`)
+    .join('\n\n');
 };
 
 /**
- * Provide fallback data when APIs fail
+ * Extract title from URL
  */
-const getFallbackData = (keyword: string): SerpData => {
+const extractTitleFromUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.replace('www.', '');
+  } catch {
+    return 'Authority Source';
+  }
+};
+
+/**
+ * Enhanced fallback data with topic-specific content
+ */
+const getEnhancedFallbackData = (keyword: string): SerpData => {
   return {
-    topResults: [
-      {
-        title: `Understanding ${keyword}`,
-        snippet: `Comprehensive information about ${keyword} based on medical research and expert analysis.`,
-        url: '',
-        position: 1
-      }
-    ],
-    relatedQuestions: generateRelevantQuestions(keyword),
-    keyStatistics: isHealthTopic(keyword) ? getHealthStatistics(keyword) : generateTopicStatistics(keyword),
+    topResults: generateFallbackResults(keyword),
+    relatedQuestions: generateTopicSpecificQuestions(keyword),
+    keyStatistics: isZincFoodTopic(keyword) || isVitaminDTopic(keyword) ? 
+      getHealthStatistics(keyword) :
+      ["Research supports evidence-based approaches to " + keyword],
     authorityContent: `Expert analysis and research-based information about ${keyword}.`
   };
 };
