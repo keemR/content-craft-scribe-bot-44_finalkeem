@@ -589,3 +589,37 @@ function generateDynamicHeadings(keyword: string, serpData: any): string[] {
     `Future Trends and Strategic Considerations`
   ];
 }
+
+/**
+ * Generate unique conclusion with specific takeaways
+ */
+function generateUniqueConclusion(keyword: string, serpData: any, semanticKeyword: string, tone: string): string {
+  const stats = serpData.contextSpecificStats;
+  
+  let conclusion = '';
+  
+  if (tone === 'conversational') {
+    conclusion += `Taking control of your **${keyword}** doesn't have to be overwhelming. `;
+  } else if (tone === 'professional') {
+    conclusion += `Effective management of **${keyword}** requires a systematic, evidence-based approach. `;
+  } else {
+    conclusion += `Successfully addressing **${keyword}** depends on understanding the clinical evidence and following proven protocols. `;
+  }
+  
+  conclusion += `The key is working with your healthcare provider to develop an individualized plan based on your specific test results, risk factors, and health goals.\n\n`;
+  
+  conclusion += `**Remember these essential points:**\n\n`;
+  conclusion += `- **Get tested first:** Proper blood testing establishes your baseline and guides treatment decisions\n`;
+  conclusion += `- **Follow protocols:** Evidence-based dosing protocols are more effective than guessing\n`;
+  conclusion += `- **Monitor progress:** Regular follow-up testing ensures your approach is working safely\n`;
+  conclusion += `- **Be patient:** Optimal levels typically take 12-16 weeks to achieve with consistent treatment\n`;
+  conclusion += `- **Maintain long-term:** Once optimal, maintenance dosing and annual monitoring preserve your results\n\n`;
+  
+  if (stats.clinicalOutcome) {
+    conclusion += `Clinical evidence demonstrates that ${stats.clinicalOutcome}, emphasizing the importance of proper medical guidance throughout your journey.\n\n`;
+  }
+  
+  conclusion += `By following these evidence-based principles and working closely with your healthcare team, you can achieve and maintain optimal ${semanticKeyword} for better health outcomes.`;
+  
+  return conclusion;
+}
