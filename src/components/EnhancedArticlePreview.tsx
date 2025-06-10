@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +42,21 @@ const EnhancedArticlePreview = ({ content, title = "", keywords = "" }: Enhanced
       });
     }
   }, [content, keywords]);
+
+  // Create metrics object for SEOMetricsPanel
+  const metricsForPanel = {
+    overallScore: seoMetrics.seoScore,
+    keywordDensity: seoMetrics.keywordDensity,
+    readabilityScore: seoMetrics.readabilityScore,
+    seoOptimization: 85,
+    contentQuality: 88,
+    engagementPotential: 82,
+    wordCount: seoMetrics.wordCount,
+    readingTime: seoMetrics.readingTime,
+    targetAudience: "General Audience",
+    primaryKeyword: keywords || "No keywords specified",
+    keywordVariations: keywords ? keywords.split(',').map(k => k.trim()) : []
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(content);
@@ -161,7 +175,7 @@ const EnhancedArticlePreview = ({ content, title = "", keywords = "" }: Enhanced
         </TabsContent>
 
         <TabsContent value="seo">
-          <SEOMetricsPanel content={content} keywords={keywords} />
+          <SEOMetricsPanel metrics={metricsForPanel} />
         </TabsContent>
 
         <TabsContent value="wordpress">
