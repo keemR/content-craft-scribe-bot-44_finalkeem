@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,11 +54,11 @@ const BulkContentManager = () => {
     try {
       console.log(`Starting content generation for: ${keyword.primary}`);
       
-      // Use the actual content generation system
+      // Use the actual content generation system with correct property names
       const content = await generateSEOContent({
-        primaryKeyword: keyword.primary,
+        targetKeywords: keyword.primary,
         researchData: `Research topic: ${keyword.primary}. Target audience: ${keyword.audience}. Secondary keywords: ${keyword.secondary.join(', ')}`,
-        targetLength: 2500,
+        articleLength: 2500,
         tone: 'informative',
         includeImages: true,
         includeFAQs: true,
