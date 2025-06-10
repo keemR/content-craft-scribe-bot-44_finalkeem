@@ -6,8 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Play, Pause, SkipForward, Download, Trash2 } from "lucide-react";
+import { Play, Pause, SkipForward, Download, Trash2, Clock, CheckCircle, XCircle } from "lucide-react";
 import CSVUploadModal from "./CSVUploadModal";
+import { generateSEOContent } from "@/utils/contentGeneration";
 
 interface BulkKeyword {
   id: string;
@@ -18,6 +19,8 @@ interface BulkKeyword {
   status: 'pending' | 'generating' | 'completed' | 'error';
   content?: string;
   generatedAt?: Date;
+  error?: string;
+  wordCount?: number;
 }
 
 const BulkContentManager = () => {
@@ -25,6 +28,7 @@ const BulkContentManager = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const { toast } = useToast();
 
   const handleKeywordsImported = (importedKeywords: Array<{
@@ -40,13 +44,39 @@ const BulkContentManager = () => {
     }));
     
     setKeywords(prev => [...prev, ...newKeywords]);
+    
+    toast({
+      title: "Keywords Imported",
+      description: `Successfully imported ${newKeywords.length} keyword sets for bulk generation.`,
+    });
   };
 
   const generateContent = async (keyword: BulkKeyword): Promise<string> => {
-    // Simulate content generation API call
-    await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
-    
-    return `# ${keyword.primary.charAt(0).toUpperCase() + keyword.primary.slice(1)}\n\n## Introduction\n\nThis is a comprehensive article about ${keyword.primary}...\n\n## Key Points\n\n- Important aspect 1\n- Important aspect 2\n- Important aspect 3\n\n## Conclusion\n\nIn conclusion, ${keyword.primary} is essential for ${keyword.audience}...`;
+    try {
+      console.log(`Starting content generation for: ${keyword.primary}`);
+      
+      // Use the actual content generation system
+      const content = await generateSEOContent({
+        primaryKeyword: keyword.primary,
+        researchData: `Research topic: ${keyword.primary}. Target audience: ${keyword.audience}. Secondary keywords: ${keyword.secondary.join(', ')}`,
+        targetLength: 2500,
+        tone: 'informative',
+        includeImages: true,
+        includeFAQs: true,
+        seoLevel: 85,
+        targetAudience: keyword.audience,
+        contentSpecificity: 80,
+        includeExamples: true,
+        includeStatistics: true,
+        useCaseStudies: true
+      });
+
+      console.log(`Content generated successfully for: ${keyword.primary}`);
+      return content;
+    } catch (error) {
+      console.error(`Failed to generate content for ${keyword.primary}:`, error);
+      throw error;
+    }
   };
 
   const startBulkGeneration = async () => {
@@ -60,14 +90,30 @@ const BulkContentManager = () => {
       return;
     }
 
+    // Sort by priority: high -> medium -> low
+    const sortedKeywords = pendingKeywords.sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    });
+
     setIsGenerating(true);
+    setIsPaused(false);
     setCurrentIndex(0);
     setProgress(0);
 
-    for (let i = 0; i < pendingKeywords.length; i++) {
-      const keyword = pendingKeywords[i];
+    for (let i = 0; i < sortedKeywords.length; i++) {
+      // Check if generation is paused
+      if (isPaused) {
+        toast({
+          title: "Generation Paused",
+          description: "Bulk generation has been paused. Click Start to resume.",
+        });
+        break;
+      }
+
+      const keyword = sortedKeywords[i];
       setCurrentIndex(i + 1);
-      setProgress(((i + 1) / pendingKeywords.length) * 100);
+      setProgress(((i + 1) / sortedKeywords.length) * 100);
 
       try {
         // Update status to generating
@@ -78,6 +124,7 @@ const BulkContentManager = () => {
         ));
 
         const content = await generateContent(keyword);
+        const wordCount = content.split(/\s+/).length;
 
         // Update with completed content
         setKeywords(prev => prev.map(kw => 
@@ -86,20 +133,30 @@ const BulkContentManager = () => {
                 ...kw, 
                 status: 'completed' as const, 
                 content,
-                generatedAt: new Date()
+                generatedAt: new Date(),
+                wordCount
               }
             : kw
         ));
 
         toast({
           title: "Content Generated",
-          description: `Article for "${keyword.primary}" has been completed.`,
+          description: `Article for "${keyword.primary}" completed (${wordCount} words).`,
         });
 
+        // Small delay between generations to prevent overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
       } catch (error) {
+        console.error(`Generation failed for ${keyword.primary}:`, error);
+        
         setKeywords(prev => prev.map(kw => 
           kw.id === keyword.id 
-            ? { ...kw, status: 'error' as const }
+            ? { 
+                ...kw, 
+                status: 'error' as const,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+              }
             : kw
         ));
 
@@ -112,10 +169,25 @@ const BulkContentManager = () => {
     }
 
     setIsGenerating(false);
+    setIsPaused(false);
+    
+    const completedCount = keywords.filter(kw => kw.status === 'completed').length;
     toast({
       title: "Bulk Generation Complete",
-      description: `Generated content for ${pendingKeywords.length} keywords.`,
+      description: `Successfully generated ${completedCount} articles.`,
     });
+  };
+
+  const pauseGeneration = () => {
+    setIsPaused(true);
+    setIsGenerating(false);
+  };
+
+  const resumeGeneration = () => {
+    if (isPaused) {
+      setIsPaused(false);
+      startBulkGeneration();
+    }
   };
 
   const exportResults = () => {
@@ -130,22 +202,52 @@ const BulkContentManager = () => {
       return;
     }
 
-    // Create and download ZIP file (simulated)
+    // Create a ZIP-like export by downloading individual files
+    completedKeywords.forEach((keyword, index) => {
+      if (keyword.content) {
+        const blob = new Blob([keyword.content], { type: 'text/markdown' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${keyword.primary.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    });
+
     toast({
-      title: "Export Started",
-      description: `Exporting ${completedKeywords.length} articles as individual files.`,
+      title: "Export Complete",
+      description: `Exported ${completedKeywords.length} articles as Markdown files.`,
     });
   };
 
   const removeKeyword = (id: string) => {
     setKeywords(prev => prev.filter(kw => kw.id !== id));
+    toast({
+      title: "Keyword Removed",
+      description: "Keyword has been removed from the generation queue.",
+    });
+  };
+
+  const retryKeyword = (id: string) => {
+    setKeywords(prev => prev.map(kw => 
+      kw.id === id 
+        ? { ...kw, status: 'pending' as const, error: undefined }
+        : kw
+    ));
+    toast({
+      title: "Retry Scheduled",
+      description: "Keyword has been reset to pending status for retry.",
+    });
   };
 
   const getStatusColor = (status: BulkKeyword['status']) => {
     switch (status) {
       case 'pending': return 'secondary';
       case 'generating': return 'default';
-      case 'completed': return 'default'; // Changed from 'success' to 'default'
+      case 'completed': return 'default';
       case 'error': return 'destructive';
       default: return 'secondary';
     }
@@ -160,27 +262,60 @@ const BulkContentManager = () => {
     }
   };
 
+  const getStatusIcon = (status: BulkKeyword['status']) => {
+    switch (status) {
+      case 'pending': return <Clock className="w-4 h-4" />;
+      case 'generating': return <Play className="w-4 h-4" />;
+      case 'completed': return <CheckCircle className="w-4 h-4" />;
+      case 'error': return <XCircle className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Bulk Content Generation</CardTitle>
           <CardDescription>
-            Import keywords from CSV and generate multiple articles automatically
+            Import keywords from CSV and generate multiple articles automatically with priority handling
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4">
             <CSVUploadModal onKeywordsImported={handleKeywordsImported} />
             
-            <Button 
-              onClick={startBulkGeneration}
-              disabled={isGenerating || keywords.length === 0}
-              className="flex-1"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {isGenerating ? "Generating..." : "Start Bulk Generation"}
-            </Button>
+            {!isGenerating && !isPaused && (
+              <Button 
+                onClick={startBulkGeneration}
+                disabled={keywords.filter(kw => kw.status === 'pending').length === 0}
+                className="flex-1"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Start Bulk Generation
+              </Button>
+            )}
+
+            {isGenerating && (
+              <Button 
+                onClick={pauseGeneration}
+                variant="outline"
+                className="flex-1"
+              >
+                <Pause className="w-4 h-4 mr-2" />
+                Pause Generation
+              </Button>
+            )}
+
+            {isPaused && (
+              <Button 
+                onClick={resumeGeneration}
+                className="flex-1"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Resume Generation
+              </Button>
+            )}
             
             <Button 
               variant="outline"
@@ -192,13 +327,45 @@ const BulkContentManager = () => {
             </Button>
           </div>
 
-          {isGenerating && (
+          {(isGenerating || isPaused) && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Progress: {currentIndex} / {keywords.filter(kw => kw.status === 'pending').length}</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="w-full" />
+              {isPaused && (
+                <p className="text-sm text-muted-foreground">Generation paused. Click Resume to continue.</p>
+              )}
+            </div>
+          )}
+
+          {keywords.length > 0 && (
+            <div className="grid grid-cols-4 gap-4 text-sm">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {keywords.filter(kw => kw.status === 'pending').length}
+                </div>
+                <div className="text-muted-foreground">Pending</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {keywords.filter(kw => kw.status === 'generating').length}
+                </div>
+                <div className="text-muted-foreground">Generating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {keywords.filter(kw => kw.status === 'completed').length}
+                </div>
+                <div className="text-muted-foreground">Completed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">
+                  {keywords.filter(kw => kw.status === 'error').length}
+                </div>
+                <div className="text-muted-foreground">Errors</div>
+              </div>
             </div>
           )}
         </CardContent>
@@ -217,6 +384,7 @@ const BulkContentManager = () => {
                   <TableHead>Audience</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Word Count</TableHead>
                   <TableHead>Generated</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -227,8 +395,13 @@ const BulkContentManager = () => {
                     <TableCell className="font-medium">
                       {keyword.primary}
                       {keyword.secondary.length > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           +{keyword.secondary.length} secondary keywords
+                        </div>
+                      )}
+                      {keyword.error && (
+                        <div className="text-xs text-red-600 mt-1">
+                          Error: {keyword.error}
                         </div>
                       )}
                     </TableCell>
@@ -239,9 +412,15 @@ const BulkContentManager = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusColor(keyword.status)}>
-                        {keyword.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(keyword.status)}
+                        <Badge variant={getStatusColor(keyword.status)}>
+                          {keyword.status}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {keyword.wordCount ? `${keyword.wordCount.toLocaleString()} words` : '-'}
                     </TableCell>
                     <TableCell>
                       {keyword.generatedAt 
@@ -250,14 +429,27 @@ const BulkContentManager = () => {
                       }
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeKeyword(keyword.id)}
-                        disabled={keyword.status === 'generating'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        {keyword.status === 'error' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => retryKeyword(keyword.id)}
+                            title="Retry generation"
+                          >
+                            <Play className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeKeyword(keyword.id)}
+                          disabled={keyword.status === 'generating'}
+                          title="Remove from queue"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

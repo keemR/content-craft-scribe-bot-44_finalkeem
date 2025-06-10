@@ -25,17 +25,21 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
 
   const downloadTemplate = () => {
     const csvContent = `primary_keyword,secondary_keywords,target_audience,priority
-"healthy meal prep","meal planning,nutrition,budget meals",busy professionals,high
-"home workout routines","fitness,exercise,bodyweight",beginners,medium
-"digital marketing tips","social media,content marketing,SEO",small business owners,high
-"sustainable living","eco-friendly,green living,zero waste",environmentally conscious,low`;
+"healthy meal prep","meal planning;nutrition;budget meals",busy professionals,high
+"home workout routines","fitness;exercise;bodyweight",beginners,medium
+"digital marketing tips","social media;content marketing;SEO",small business owners,high
+"sustainable living","eco-friendly;green living;zero waste",environmentally conscious,low
+"vitamin d deficiency symptoms","vitamin deficiency;health symptoms;nutritional health",health-conscious individuals,high
+"online business ideas","entrepreneurship;passive income;side hustle",aspiring entrepreneurs,medium`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'keyword-template.csv';
+    a.download = 'bulk-keywords-template.csv';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
     toast({
@@ -44,9 +48,36 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
     });
   };
 
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current.trim());
+    return result;
+  };
+
   const processCSV = (csvText: string) => {
     const lines = csvText.split('\n').filter(line => line.trim());
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+    
+    if (lines.length < 2) {
+      throw new Error('CSV file must have at least a header row and one data row');
+    }
+    
+    const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, '').trim().toLowerCase());
     
     const requiredHeaders = ['primary_keyword', 'secondary_keywords', 'target_audience', 'priority'];
     const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
@@ -61,26 +92,43 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
       const line = lines[i];
       if (!line.trim()) continue;
       
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim());
-      
-      if (values.length >= 4) {
-        const primaryKeyword = values[headers.indexOf('primary_keyword')];
-        const secondaryKeywords = values[headers.indexOf('secondary_keywords')]
-          .split(';')
-          .map(k => k.trim())
-          .filter(k => k);
-        const audience = values[headers.indexOf('target_audience')];
-        const priority = values[headers.indexOf('priority')] as 'high' | 'medium' | 'low';
+      try {
+        const values = parseCSVLine(line).map(v => v.replace(/"/g, '').trim());
         
-        if (primaryKeyword) {
+        if (values.length >= 4) {
+          const primaryKeyword = values[headers.indexOf('primary_keyword')];
+          const secondaryKeywordsRaw = values[headers.indexOf('secondary_keywords')];
+          const audience = values[headers.indexOf('target_audience')];
+          const priorityRaw = values[headers.indexOf('priority')];
+          
+          if (!primaryKeyword) {
+            console.warn(`Skipping row ${i + 1}: missing primary keyword`);
+            continue;
+          }
+          
+          const secondaryKeywords = secondaryKeywordsRaw
+            ? secondaryKeywordsRaw.split(';').map(k => k.trim()).filter(k => k)
+            : [];
+          
+          const priority = ['high', 'medium', 'low'].includes(priorityRaw) 
+            ? priorityRaw as 'high' | 'medium' | 'low'
+            : 'medium';
+          
           keywords.push({
             primary: primaryKeyword,
             secondary: secondaryKeywords,
-            audience,
-            priority: ['high', 'medium', 'low'].includes(priority) ? priority : 'medium'
+            audience: audience || 'general audience',
+            priority
           });
         }
+      } catch (error) {
+        console.warn(`Error parsing row ${i + 1}:`, error);
+        continue;
       }
+    }
+    
+    if (keywords.length === 0) {
+      throw new Error('No valid keywords found in the CSV file. Please check the format.');
     }
     
     return keywords;
@@ -96,15 +144,27 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
       return;
     }
 
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select a CSV file (.csv extension).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
       const text = await file.text();
+      
+      if (!text.trim()) {
+        throw new Error('CSV file is empty');
+      }
+      
       const keywords = processCSV(text);
       
-      if (keywords.length === 0) {
-        throw new Error('No valid keywords found in the CSV file');
-      }
+      console.log('Parsed keywords:', keywords);
       
       onKeywordsImported(keywords);
       setIsOpen(false);
@@ -116,6 +176,7 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
       });
       
     } catch (error) {
+      console.error('CSV processing error:', error);
       toast({
         title: "Import Failed",
         description: error instanceof Error ? error.message : "Failed to process CSV file",
@@ -131,7 +192,7 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full">
           <Upload className="w-4 h-4 mr-2" />
-          Bulk Import Keywords
+          Import Keywords from CSV
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
@@ -146,9 +207,19 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Your CSV should include: primary_keyword, secondary_keywords (separated by semicolons), target_audience, and priority (high/medium/low).
+              Your CSV should include: <strong>primary_keyword</strong>, <strong>secondary_keywords</strong> (separated by semicolons), 
+              <strong>target_audience</strong>, and <strong>priority</strong> (high/medium/low).
             </AlertDescription>
           </Alert>
+          
+          <div className="bg-muted p-4 rounded-lg">
+            <h4 className="font-semibold mb-2">Example CSV Format:</h4>
+            <pre className="text-xs bg-background p-3 rounded border overflow-auto">
+{`primary_keyword,secondary_keywords,target_audience,priority
+"healthy meal prep","meal planning;nutrition;budget meals",busy professionals,high
+"home workout routines","fitness;exercise;bodyweight",beginners,medium`}
+            </pre>
+          </div>
           
           <div className="space-y-4">
             <div>
@@ -160,6 +231,11 @@ const CSVUploadModal = ({ onKeywordsImported }: CSVUploadModalProps) => {
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 className="mt-1"
               />
+              {file && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
             </div>
             
             <div className="flex gap-2">
