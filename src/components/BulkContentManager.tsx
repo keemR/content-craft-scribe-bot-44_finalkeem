@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Play, Pause, SkipForward, Download, Trash2, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Play, Pause, SkipForward, Download, Trash2, Clock, CheckCircle, XCircle, Eye } from "lucide-react";
 import CSVUploadModal from "./CSVUploadModal";
 import { generateSEOContent } from "@/utils/contentGeneration";
 
@@ -22,13 +22,42 @@ interface BulkKeyword {
   wordCount?: number;
 }
 
+// Storage key for localStorage
+const STORAGE_KEY = 'bulk-content-articles';
+
 const BulkContentManager = () => {
   const [keywords, setKeywords] = useState<BulkKeyword[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<BulkKeyword | null>(null);
   const { toast } = useToast();
+
+  // Load articles from localStorage on component mount
+  useEffect(() => {
+    const savedArticles = localStorage.getItem(STORAGE_KEY);
+    if (savedArticles) {
+      try {
+        const parsedArticles = JSON.parse(savedArticles);
+        // Convert date strings back to Date objects
+        const articlesWithDates = parsedArticles.map((article: any) => ({
+          ...article,
+          generatedAt: article.generatedAt ? new Date(article.generatedAt) : undefined
+        }));
+        setKeywords(articlesWithDates);
+      } catch (error) {
+        console.error('Error loading saved articles:', error);
+      }
+    }
+  }, []);
+
+  // Save articles to localStorage whenever keywords change
+  useEffect(() => {
+    if (keywords.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(keywords));
+    }
+  }, [keywords]);
 
   const handleKeywordsImported = (importedKeywords: Array<{
     primary: string;
@@ -242,6 +271,15 @@ const BulkContentManager = () => {
     });
   };
 
+  const clearAllArticles = () => {
+    setKeywords([]);
+    localStorage.removeItem(STORAGE_KEY);
+    toast({
+      title: "Articles Cleared",
+      description: "All articles have been removed from storage.",
+    });
+  };
+
   const getStatusColor = (status: BulkKeyword['status']) => {
     switch (status) {
       case 'pending': return 'secondary';
@@ -277,7 +315,7 @@ const BulkContentManager = () => {
         <CardHeader>
           <CardTitle>Bulk Content Generation</CardTitle>
           <CardDescription>
-            Import keywords from CSV and generate multiple articles automatically with priority handling
+            Import keywords from CSV and generate multiple articles automatically with priority handling. Articles are automatically saved and persist across sessions.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -324,6 +362,17 @@ const BulkContentManager = () => {
               <Download className="w-4 h-4 mr-2" />
               Export Results
             </Button>
+
+            {keywords.length > 0 && (
+              <Button 
+                variant="outline"
+                onClick={clearAllArticles}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear All
+              </Button>
+            )}
           </div>
 
           {(isGenerating || isPaused) && (
@@ -374,6 +423,9 @@ const BulkContentManager = () => {
         <Card>
           <CardHeader>
             <CardTitle>Generation Queue ({keywords.length} items)</CardTitle>
+            <CardDescription>
+              Articles are automatically saved to your browser's local storage
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -429,6 +481,16 @@ const BulkContentManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        {keyword.status === 'completed' && keyword.content && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedArticle(keyword)}
+                            title="Preview article"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
                         {keyword.status === 'error' && (
                           <Button
                             variant="ghost"
@@ -456,6 +518,29 @@ const BulkContentManager = () => {
             </Table>
           </CardContent>
         </Card>
+      )}
+
+      {/* Article Preview Modal */}
+      {selectedArticle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[80vh] overflow-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">{selectedArticle.primary}</h3>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedArticle(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="prose max-w-none">
+                <div className="whitespace-pre-wrap">{selectedArticle.content}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
