@@ -1,3 +1,4 @@
+import { createJinaResearchService } from './jinaResearchService';
 
 interface WikipediaResponse {
   query?: {
@@ -34,21 +35,47 @@ interface EnhancedResearchData {
   statisticalData: string[];
   expertOpinions: string[];
   recentStudies: string[];
+  jinaResearchData?: {
+    extractedContent: Array<{
+      title: string;
+      content: string;
+      url: string;
+      description: string;
+    }>;
+    semanticResults: Array<{
+      title: string;
+      url: string;
+      content: string;
+      description: string;
+    }>;
+    factualValidation: {
+      score: number;
+      isFactual: boolean;
+      references: Array<{
+        url: string;
+        title: string;
+        snippet: string;
+      }>;
+    };
+    contentGaps: string[];
+    structuredInsights: string[];
+  };
 }
 
 /**
- * Enhanced research service with multiple free data sources
+ * Enhanced research service with Jina AI integration
  */
-export const performEnhancedResearch = async (keyword: string): Promise<EnhancedResearchData> => {
+export const performEnhancedResearch = async (keyword: string, jinaApiKey?: string): Promise<EnhancedResearchData> => {
   console.log(`🔍 Starting enhanced research for: "${keyword}"`);
   
   try {
-    // Parallel research from multiple sources
-    const [serpData, wikipediaData, redditInsights, pubmedData] = await Promise.allSettled([
+    // Parallel research from multiple sources including Jina AI
+    const [serpData, wikipediaData, redditInsights, pubmedData, jinaData] = await Promise.allSettled([
       fetchSerpData(keyword),
       fetchWikipediaData(keyword),
       fetchRedditInsights(keyword),
-      fetchPubMedData(keyword)
+      fetchPubMedData(keyword),
+      jinaApiKey ? fetchJinaResearchData(keyword, jinaApiKey) : Promise.resolve(null)
     ]);
 
     const researchData: EnhancedResearchData = {
@@ -59,16 +86,17 @@ export const performEnhancedResearch = async (keyword: string): Promise<Enhanced
       trendingQuestions: [],
       statisticalData: [],
       expertOpinions: [],
-      recentStudies: pubmedData.status === 'fulfilled' ? pubmedData.value : []
+      recentStudies: pubmedData.status === 'fulfilled' ? pubmedData.value : [],
+      jinaResearchData: jinaData.status === 'fulfilled' ? jinaData.value : undefined
     };
 
-    // Analyze content gaps
+    // Analyze content gaps (enhanced with Jina data)
     researchData.competitorGaps = analyzeContentGaps(keyword, researchData);
     
-    // Generate trending questions
+    // Generate trending questions (enhanced with Jina semantic results)
     researchData.trendingQuestions = generateTrendingQuestions(keyword, researchData);
     
-    // Extract statistical data
+    // Extract statistical data (enhanced with Jina extracted content)
     researchData.statisticalData = extractStatisticalData(researchData);
     
     console.log(`✅ Enhanced research completed for: "${keyword}"`);
@@ -77,6 +105,28 @@ export const performEnhancedResearch = async (keyword: string): Promise<Enhanced
   } catch (error) {
     console.error('Enhanced research failed:', error);
     return getFallbackEnhancedData(keyword);
+  }
+};
+
+/**
+ * Fetch Jina AI research data
+ */
+const fetchJinaResearchData = async (keyword: string, jinaApiKey: string) => {
+  try {
+    console.log('🤖 Fetching Jina AI research data...');
+    const jinaService = createJinaResearchService(jinaApiKey);
+    
+    // Get URLs from SERP data first for content extraction
+    const { researchSERPs } = await import('./serpResearchService');
+    const serpData = await researchSERPs(keyword);
+    const urls = serpData.topResults.map(result => result.url).slice(0, 5);
+    
+    const jinaData = await jinaService.performComprehensiveResearch(keyword, urls);
+    console.log('✅ Jina AI research data fetched successfully');
+    return jinaData;
+  } catch (error) {
+    console.error('Jina AI research failed:', error);
+    return null;
   }
 };
 
@@ -195,92 +245,103 @@ const fetchPubMedData = async (keyword: string): Promise<string[]> => {
 };
 
 /**
- * Analyze content gaps based on competitor research
+ * Enhanced content gaps analysis with Jina AI data
  */
 const analyzeContentGaps = (keyword: string, researchData: EnhancedResearchData): string[] => {
   const gaps: string[] = [];
   
+  // Use Jina AI content gaps if available
+  if (researchData.jinaResearchData?.contentGaps) {
+    gaps.push(...researchData.jinaResearchData.contentGaps);
+  }
+  
+  // Add keyword-specific gaps
   if (keyword.toLowerCase().includes('zinc')) {
     gaps.push(
       'Zinc bioavailability comparison between different food preparation methods',
       'Interaction between zinc and other micronutrients (copper, iron, calcium)',
-      'Zinc requirements for specific populations (elderly, athletes, vegans)',
-      'Regional variations in zinc content of foods based on soil conditions',
-      'Zinc absorption inhibitors and enhancers with specific timing recommendations',
-      'Cost-effectiveness analysis of zinc-rich foods vs supplements',
-      'Zinc content changes during food storage and cooking processes',
-      'Personalized zinc recommendations based on individual health markers'
+      'Zinc requirements for specific populations (elderly, athletes, vegans)'
     );
   } else if (keyword.toLowerCase().includes('vitamin d')) {
     gaps.push(
       'Vitamin D synthesis rates by geographic location and season',
       'Genetic factors affecting vitamin D metabolism (VDR polymorphisms)',
-      'Vitamin D testing frequency recommendations for different populations',
-      'Drug interactions affecting vitamin D absorption and metabolism',
-      'Vitamin D deficiency prevalence in specific ethnic groups',
-      'Cost-benefit analysis of vitamin D testing vs universal supplementation'
+      'Vitamin D testing frequency recommendations for different populations'
     );
   } else {
     gaps.push(
       'Latest research findings and clinical trial results',
       'Cost-effectiveness analysis and budget considerations',
-      'Implementation timelines and expected results',
-      'Individual variation factors and personalization strategies',
-      'Long-term outcomes and sustainability factors'
+      'Implementation timelines and expected results'
     );
   }
   
-  return gaps;
+  return [...new Set(gaps)]; // Remove duplicates
 };
 
 /**
- * Generate trending questions based on research data
+ * Enhanced trending questions with Jina AI semantic results
  */
 const generateTrendingQuestions = (keyword: string, researchData: EnhancedResearchData): string[] => {
-  if (keyword.toLowerCase().includes('zinc')) {
-    return [
-      'How does zinc absorption differ between animal and plant sources?',
-      'What time of day is best for zinc supplementation?',
-      'Can you get too much zinc from food alone?',
-      'How does cooking affect zinc content in foods?',
-      'What are the early warning signs of zinc toxicity?',
-      'How long does it take to correct zinc deficiency?',
-      'Which medications interfere with zinc absorption?',
-      'How does age affect zinc requirements?',
-      'What soil conditions affect zinc content in vegetables?',
-      'How does zinc status affect wound healing speed?'
-    ];
+  const questions: string[] = [];
+  
+  // Generate questions from Jina semantic results
+  if (researchData.jinaResearchData?.semanticResults) {
+    researchData.jinaResearchData.semanticResults.forEach(result => {
+      if (result.title.includes('?')) {
+        questions.push(result.title);
+      } else {
+        questions.push(`How does ${keyword} relate to ${result.title.toLowerCase()}?`);
+      }
+    });
   }
   
-  return [
-    `What are the latest research findings about ${keyword}?`,
-    `How does ${keyword} vary between different populations?`,
-    `What are the long-term effects of ${keyword}?`,
-    `How much does ${keyword} cost compared to alternatives?`,
-    `What factors influence individual response to ${keyword}?`
-  ];
+  // Add keyword-specific questions
+  if (keyword.toLowerCase().includes('zinc')) {
+    questions.push(
+      'How does zinc absorption differ between animal and plant sources?',
+      'What time of day is best for zinc supplementation?',
+      'Can you get too much zinc from food alone?'
+    );
+  } else {
+    questions.push(
+      `What are the latest research findings about ${keyword}?`,
+      `How does ${keyword} vary between different populations?`,
+      `What are the long-term effects of ${keyword}?`
+    );
+  }
+  
+  return [...new Set(questions)].slice(0, 10); // Remove duplicates and limit
 };
 
 /**
- * Extract statistical data from research
+ * Enhanced statistical data extraction with Jina AI content
  */
 const extractStatisticalData = (researchData: EnhancedResearchData): string[] => {
   const stats: string[] = [];
+  
+  // Extract stats from Jina AI extracted content
+  if (researchData.jinaResearchData?.extractedContent) {
+    researchData.jinaResearchData.extractedContent.forEach(content => {
+      const statMatches = content.content.match(/(\d+(?:\.\d+)?%|\$[\d,]+(?:\.\d+)?[BM]?|\d+(?:,\d+)*(?:\.\d+)?\s*(?:billion|million|thousand|people|adults|patients))/gi);
+      if (statMatches) {
+        stats.push(...statMatches.slice(0, 2));
+      }
+    });
+  }
   
   // Add SERP statistics if available
   if (researchData.serpData?.keyStatistics) {
     stats.push(...researchData.serpData.keyStatistics);
   }
   
-  // Add derived statistics
+  // Add default statistics
   stats.push(
     'Content with infographics gets 30x more views than text-only content',
-    'Articles with 7+ headings rank 25% higher in search results',
-    'Content over 3000 words ranks in top 10 for 3x more keywords',
-    'Pages with FAQ sections have 40% higher user engagement'
+    'Articles with 7+ headings rank 25% higher in search results'
   );
   
-  return stats;
+  return [...new Set(stats)].slice(0, 8); // Remove duplicates and limit
 };
 
 /**
