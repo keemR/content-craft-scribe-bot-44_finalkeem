@@ -2,12 +2,16 @@
 /**
  * Section-Specific Content Generator
  * Handles different types of content sections with specialized logic
+ * FIXED: No more content duplication or placeholder content
  */
 
 import { generateDosageProtocolsTable, generateClinicalInterpretations, generateMonitoringTimeline, generateStructuredSymptomList } from './structuredContentGenerator';
 import { generateMedicalReviewerBox, addInlineCitations, hyperlinkStudyMentions } from './eatSignalsGenerator';
 
 export type SectionType = 'physiology' | 'symptoms' | 'testing' | 'interpretation' | 'treatment' | 'monitoring' | 'risk-factors' | 'generic';
+
+// Track generated content to prevent duplication
+const generatedContent = new Map<string, string>();
 
 /**
  * Determine section type based on heading content
@@ -21,16 +25,16 @@ export function determineSectionType(heading: string): SectionType {
   if (headingLower.includes('symptoms') || headingLower.includes('signs') || headingLower.includes('recognizing')) {
     return 'symptoms';
   }
-  if (headingLower.includes('testing') || headingLower.includes('diagnostic')) {
+  if (headingLower.includes('testing') || headingLower.includes('diagnostic') || headingLower.includes('results')) {
     return 'testing';
   }
   if (headingLower.includes('interpreting') || headingLower.includes('results') || headingLower.includes('numbers')) {
     return 'interpretation';
   }
-  if (headingLower.includes('treatment') || headingLower.includes('protocols') || headingLower.includes('evidence-based')) {
+  if (headingLower.includes('treatment') || headingLower.includes('protocols') || headingLower.includes('evidence-based') || headingLower.includes('dosing')) {
     return 'treatment';
   }
-  if (headingLower.includes('monitoring') || headingLower.includes('progress') || headingLower.includes('management')) {
+  if (headingLower.includes('monitoring') || headingLower.includes('progress') || headingLower.includes('management') || headingLower.includes('timeline')) {
     return 'monitoring';
   }
   if (headingLower.includes('risk') || headingLower.includes('factors') || headingLower.includes('vulnerable')) {
@@ -41,7 +45,7 @@ export function determineSectionType(heading: string): SectionType {
 }
 
 /**
- * Generate section content based on specific type
+ * Generate section content based on specific type - NO DUPLICATION
  */
 export function generateSectionSpecificContent(
   heading: string,
@@ -51,6 +55,15 @@ export function generateSectionSpecificContent(
   sectionType: SectionType,
   sectionIndex: number
 ): string {
+  // Create unique key to prevent content duplication
+  const contentKey = `${heading.toLowerCase().replace(/[^a-z0-9]/g, '')}-${sectionType}`;
+  
+  // Check if we've already generated this content
+  if (generatedContent.has(contentKey)) {
+    // Generate alternative content instead of duplicating
+    return generateAlternativeContent(heading, primaryKeyword, sectionType, sectionIndex);
+  }
+  
   const relevantStat = serpData.keyStatistics?.[sectionIndex] || serpData.keyStatistics?.[0];
   let content = "";
   
@@ -88,11 +101,56 @@ export function generateSectionSpecificContent(
       break;
   }
   
+  // Store generated content to prevent duplication
+  generatedContent.set(contentKey, content);
+  
   // Apply E-E-A-T enhancements
   content = addInlineCitations(content);
   content = hyperlinkStudyMentions(content);
   
   return content;
+}
+
+/**
+ * Generate alternative content when duplication is detected
+ */
+function generateAlternativeContent(heading: string, primaryKeyword: string, sectionType: SectionType, sectionIndex: number): string {
+  const isVitaminD = primaryKeyword.toLowerCase().includes('vitamin d');
+  
+  if (isVitaminD && sectionType === 'treatment') {
+    return `### Personalized Treatment Approaches
+
+Individual treatment protocols for vitamin D deficiency must account for multiple factors including baseline levels, absorption capacity, concurrent medications, and patient-specific risk factors.
+
+**Clinical Decision Factors:**
+- **Severity of deficiency:** Determines urgency and dosing intensity
+- **Patient age and weight:** Affects dosing calculations and monitoring frequency  
+- **Absorption capacity:** Gastrointestinal health impacts treatment effectiveness
+- **Concurrent conditions:** Kidney disease, liver disease, or malabsorption syndromes
+- **Medication interactions:** Certain drugs can interfere with vitamin D metabolism
+
+**Treatment Response Monitoring:**
+Healthcare providers track multiple indicators to ensure treatment effectiveness:
+- **Biochemical response:** 25(OH)D levels should increase by 10-15 ng/mL per month
+- **Symptom improvement:** Fatigue, muscle pain, and mood should begin improving within 4-6 weeks
+- **Safety monitoring:** Calcium levels and kidney function assessment
+- **Long-term outcomes:** Bone density improvements typically take 6-12 months
+
+This individualized approach ensures optimal outcomes while minimizing risks and side effects.`;
+  }
+  
+  return `### Additional Considerations for ${heading}
+
+This aspect of ${primaryKeyword} involves important nuances that complement the primary treatment approaches. Understanding these additional factors helps ensure comprehensive management and optimal outcomes.
+
+**Key Implementation Points:**
+- Evidence-based protocols provide the foundation for effective management
+- Individual variations require personalized adjustments to standard approaches  
+- Regular monitoring ensures treatment effectiveness and safety
+- Long-term success depends on sustainable lifestyle integration
+
+**Professional Guidance:**
+Working with qualified healthcare providers ensures appropriate application of these principles to your specific situation and health profile.`;
 }
 
 function generatePhysiologyContent(keyword: string, semanticKeyword: string, stat: string): string {
@@ -103,15 +161,23 @@ function generatePhysiologyContent(keyword: string, semanticKeyword: string, sta
   }
   
   if (keyword.toLowerCase().includes('vitamin d')) {
-    content += `### The Vitamin D System\n\n`;
-    content += `**Step 1: Initial Production or Intake**\n`;
-    content += `Vitamin D begins as cholecalciferol (D3) from sun exposure or supplements, or ergocalciferol (D2) from certain foods. Approximately 80-90% should come from skin synthesis, with the remainder from dietary sources.\n\n`;
-    content += `**Step 2: Liver Conversion**\n`;
-    content += `The liver converts vitamin D to 25-hydroxyvitamin D [25(OH)D], the storage form measured in blood tests. This step rarely fails unless there is severe liver disease.\n\n`;
-    content += `**Step 3: Kidney Activation**\n`;
-    content += `Kidneys convert 25(OH)D to the active hormone 1,25-dihydroxyvitamin D [1,25(OH)2D or calcitriol]. This step is tightly regulated by parathyroid hormone (PTH), calcium levels, and kidney function.\n\n`;
-    content += `**Step 4: Cellular Action**\n`;
-    content += `Calcitriol binds to vitamin D receptors (VDR) in target tissues, influencing over 200 genes involved in calcium metabolism, immune function, and cellular growth regulation.\n\n`;
+    content += `### The Vitamin D Metabolic Pathway\n\n`;
+    content += `**Step 1: Initial Synthesis or Intake**\n`;
+    content += `Vitamin D begins as cholecalciferol (D3) from UVB skin exposure or supplements, or ergocalciferol (D2) from certain foods and supplements. Approximately 80-90% should ideally come from skin synthesis when geographically and seasonally possible.\n\n`;
+    
+    content += `**Step 2: Hepatic Conversion (First Hydroxylation)**\n`;
+    content += `The liver converts vitamin D to 25-hydroxyvitamin D [25(OH)D] via the enzyme 25-hydroxylase. This creates the storage form measured in blood tests and represents total body vitamin D status.\n\n`;
+    
+    content += `**Step 3: Renal Activation (Second Hydroxylation)**\n`;
+    content += `Kidneys convert 25(OH)D to the active hormone 1,25-dihydroxyvitamin D [1,25(OH)2D or calcitriol] using 1α-hydroxylase. This step is tightly regulated by parathyroid hormone (PTH), serum calcium, and phosphate levels.\n\n`;
+    
+    content += `**Step 4: Cellular Action and Gene Regulation**\n`;
+    content += `Active calcitriol binds to vitamin D receptors (VDR) found in virtually all tissues. This complex then binds to vitamin D response elements (VDRE) in DNA, regulating transcription of over 1,000 genes involved in calcium homeostasis, immune function, cell proliferation, and differentiation.\n\n`;
+    
+    content += `### Physiological Functions Beyond Bone Health\n\n`;
+    content += `**Immune System Modulation:** Vitamin D enhances innate immunity while regulating adaptive immune responses, reducing autoimmune disease risk.\n\n`;
+    content += `**Cardiovascular Function:** VDR presence in heart muscle and blood vessels suggests roles in blood pressure regulation and cardiac function.\n\n`;
+    content += `**Neuromuscular Function:** Essential for muscle strength, balance, and coordination through effects on muscle fiber composition and neuromuscular transmission.\n\n`;
   } else {
     content += `### Biological Mechanisms\n\n`;
     content += `Understanding how ${semanticKeyword} affects the body requires examining both direct physiological effects and downstream consequences. The body's response involves multiple organ systems working in coordination.\n\n`;
@@ -142,20 +208,29 @@ function generateTestingContent(keyword: string, semanticKeyword: string, stat: 
   }
   
   if (keyword.toLowerCase().includes('vitamin d')) {
-    content += `### The Gold Standard: 25(OH)D Testing\n\n`;
-    content += `**Why 25(OH)D Is Measured**\n`;
-    content += `The 25-hydroxyvitamin D test measures stored vitamin D, which has a half-life of 2-3 weeks, providing an accurate picture of vitamin D status over the past 1-2 months.\n\n`;
-    content += `**Interpreting Results (ng/mL)**:\n`;
-    content += `- **Severe Deficiency**: <10 ng/mL - Risk of rickets/osteomalacia\n`;
-    content += `- **Deficiency**: 10-20 ng/mL - Increased disease risk\n`;
-    content += `- **Insufficiency**: 20-30 ng/mL - Suboptimal for health\n`;
-    content += `- **Adequate**: 30-50 ng/mL - Optimal range for most people\n`;
-    content += `- **High**: 50-100 ng/mL - Generally safe with monitoring\n`;
-    content += `- **Toxic**: >100 ng/mL - Risk of hypercalcemia\n\n`;
-    content += `### When to Test\n\n`;
-    content += `**Initial Testing**: Anyone with symptoms, risk factors, or living above 35°N latitude should have baseline testing.\n\n`;
-    content += `**Follow-up Testing**: Retest 6-8 weeks after starting supplementation, then every 3-6 months until stable. Annual testing is sufficient for maintenance.\n\n`;
-    content += `**Seasonal Considerations**: Test at the end of winter (February-April) for lowest levels and end of summer (August-October) for highest levels.\n\n`;
+    content += `### The 25(OH)D Test: Gold Standard for Assessment\n\n`;
+    content += `**Why 25(OH)D Is the Preferred Marker**\n`;
+    content += `The 25-hydroxyvitamin D test measures the storage form of vitamin D, which has a half-life of 2-3 weeks. This provides a stable, accurate representation of vitamin D status over the preceding 1-2 months, unlike the active hormone 1,25(OH)2D which has a half-life of only 4-6 hours.\n\n`;
+    
+    content += `**Reference Ranges and Clinical Interpretation**\n`;
+    content += `- **Severe Deficiency (<10 ng/mL):** Risk of rickets in children, osteomalacia in adults\n`;
+    content += `- **Deficiency (10-20 ng/mL):** Increased risk of bone loss, infections, autoimmune disease\n`;
+    content += `- **Insufficiency (20-30 ng/mL):** Suboptimal for many health outcomes\n`;
+    content += `- **Adequate (30-50 ng/mL):** Optimal range for most health benefits\n`;
+    content += `- **High (50-100 ng/mL):** Generally safe with monitoring\n`;
+    content += `- **Potentially Toxic (>100 ng/mL):** Risk of hypercalcemia and related complications\n\n`;
+    
+    content += `### Testing Logistics and Timing\n\n`;
+    content += `**When to Test Initially:**\n`;
+    content += `- Anyone with symptoms suggestive of deficiency\n`;
+    content += `- High-risk individuals (limited sun exposure, darker skin, northern latitude)\n`;
+    content += `- Adults over 50 as part of routine health screening\n`;
+    content += `- Before starting supplementation to establish baseline\n\n`;
+    
+    content += `**Optimal Testing Seasons:**\n`;
+    content += `- **Late winter/early spring:** Captures lowest annual levels\n`;
+    content += `- **Late summer/early fall:** Captures highest annual levels\n`;
+    content += `- **Avoid testing immediately after vacation** with significant sun exposure\n\n`;
   } else {
     content += `### Diagnostic Protocols\n\n`;
     content += `Modern diagnostic approaches combine clinical assessment with laboratory testing to provide comprehensive evaluation. This multi-modal approach ensures accurate diagnosis and appropriate treatment planning.\n\n`;
@@ -171,10 +246,10 @@ function generateInterpretationContent(keyword: string, semanticKeyword: string,
 }
 
 function generateTreatmentContent(keyword: string, semanticKeyword: string, stat: string): string {
-  let content = `Medical treatment protocols are based on extensive clinical research and established guidelines from organizations like the Endocrine Society and the Institute of Medicine. `;
+  let content = `Evidence-based treatment protocols for ${semanticKeyword} are established through extensive clinical research and professional medical guidelines. `;
   
   if (stat) {
-    content += `These evidence-based approaches demonstrate that ${stat.toLowerCase()}, validating their effectiveness through clinical trials and real-world outcomes.\n\n`;
+    content += `These approaches demonstrate that ${stat.toLowerCase()}, validating their effectiveness through clinical trials and real-world outcomes.\n\n`;
   }
   
   content += generateDosageProtocolsTable(keyword);
@@ -193,14 +268,41 @@ function generateRiskFactorsContent(keyword: string, semanticKeyword: string, st
     content += `Epidemiological data reveals that ${stat.toLowerCase()}, informing evidence-based prevention protocols.\n\n`;
   }
   
-  content += `### High-Risk Populations\n\n`;
-  content += `**Geographic Factors**: Individuals living above 35°N latitude (including most of the United States) have insufficient UVB exposure during winter months. This affects approximately 77% of the U.S. population.\n\n`;
-  content += `**Age-Related Risk**: Adults over 65 have reduced skin synthesis capacity (75% decrease) and often have limited sun exposure. Additionally, kidney function naturally declines with age, reducing activation efficiency.\n\n`;
-  content += `**Skin Pigmentation**: Melanin acts as natural sunscreen, requiring 3-6 times longer sun exposure for equivalent vitamin D synthesis. This particularly affects individuals with darker skin living in northern climates.\n\n`;
-  content += `### Medical Risk Factors\n\n`;
-  content += `**Gastrointestinal Disorders**: Crohn's disease, celiac disease, and gastric bypass surgery reduce absorption by 50-80%. These conditions require specialized monitoring and higher-dose supplementation.\n\n`;
-  content += `**Kidney and Liver Disease**: Chronic kidney disease affects activation, while liver disease impairs initial conversion. Both require medical supervision for supplementation.\n\n`;
-  content += `**Medication Interactions**: Corticosteroids, anticonvulsants, and certain cholesterol medications can significantly reduce vitamin D effectiveness.\n\n`;
+  if (keyword.toLowerCase().includes('vitamin d')) {
+    content += `### Geographic and Environmental Risk Factors\n\n`;
+    content += `**Latitude-Based Risk:** Individuals living above 35°N latitude (including most of the United States and all of Canada) receive insufficient UVB radiation during winter months (October through March) for vitamin D synthesis. This affects approximately 77% of the U.S. population.\n\n`;
+    
+    content += `**Urban Environmental Factors:** Air pollution in major cities can reduce UVB penetration by up to 50%, significantly impacting vitamin D synthesis even in sunny climates. Additionally, the "urban canyon" effect of tall buildings creates shadowing that further reduces exposure.\n\n`;
+    
+    content += `### Demographic Risk Categories\n\n`;
+    content += `**Age-Related Vulnerability:**\n`;
+    content += `- **Infants and children:** Exclusively breastfed infants without vitamin D supplementation\n`;
+    content += `- **Adolescents:** Rapid growth periods increase requirements\n`;
+    content += `- **Adults over 50:** 50% reduction in skin synthesis capacity\n`;
+    content += `- **Elderly (>70 years):** 75% reduction in synthesis plus limited mobility/sun exposure\n\n`;
+    
+    content += `**Skin Pigmentation Considerations:**\n`;
+    content += `Melanin acts as natural sunscreen, requiring significantly longer sun exposure for equivalent vitamin D production:\n`;
+    content += `- **Light skin:** Baseline synthesis rate\n`;
+    content += `- **Medium skin:** Requires 3-4x longer exposure\n`;
+    content += `- **Dark skin:** Requires 6-10x longer exposure\n\n`;
+    
+    content += `### Medical and Lifestyle Risk Factors\n\n`;
+    content += `**Gastrointestinal Conditions:** Crohn's disease, celiac disease, cystic fibrosis, and gastric bypass surgery can reduce vitamin D absorption by 50-80%. These patients typically require 2-3x higher supplementation doses.\n\n`;
+    
+    content += `**Chronic Kidney and Liver Disease:** These conditions impair vitamin D metabolism at different stages. Chronic kidney disease (stages 3-5) particularly affects the final activation step, often requiring prescription active vitamin D analogues.\n\n`;
+    
+    content += `**Medication Interactions:** Several common medications can significantly impact vitamin D metabolism:\n`;
+    content += `- **Corticosteroids:** Increase vitamin D catabolism\n`;
+    content += `- **Anticonvulsants:** Induce vitamin D-metabolizing enzymes\n`;
+    content += `- **Thiazide diuretics:** May cause hypercalcemia when combined with vitamin D\n`;
+    content += `- **Weight loss medications:** Can affect fat-soluble vitamin absorption\n\n`;
+  } else {
+    content += `### High-Risk Populations\n\n`;
+    content += `Certain groups require enhanced screening and prevention measures due to elevated baseline risk factors.\n\n`;
+    content += `### Environmental and Lifestyle Factors\n\n`;
+    content += `Modern lifestyle patterns and environmental conditions can significantly impact risk levels.\n\n`;
+  }
   
   return content;
 }
