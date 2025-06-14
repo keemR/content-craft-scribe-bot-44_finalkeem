@@ -691,5 +691,3 @@ const BulkContentManager = () => {
 };
 
 export default BulkContentManager;
-
-}
