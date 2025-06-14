@@ -1,4 +1,3 @@
-
 import { ContentGenerationOptions } from './types';
 import { generateSectionSpecificContent, determineSectionType } from './generators/sectionSpecificGenerator';
 import { generateMedicalReviewerBox, generateReferencesSection, generateDetailedAuthorSection, addInlineCitations, hyperlinkStudyMentions } from './generators/eatSignalsGenerator';
@@ -166,10 +165,7 @@ function generateUniqueTemplateSpecificHeadings(primaryKeyword: string, contentT
       "Who's at Risk: High-Risk Groups and Geographic Factors",
       "Getting Tested and Understanding Your Results",
       "Vitamin D Treatment: Dosing, Recovery, and Timeline",
-      "Prevention and Lifestyle Strategies",
-      "Food Sources and Dietary Approaches",
-      "Safe Sun Exposure Guidelines",
-      "Supplementation Best Practices"
+      "Prevention and Lifestyle Strategies"
     ];
   }
   
@@ -198,14 +194,12 @@ function generateActualSectionContent(
   
   if (isVitaminD) {
     switch (sectionIndex) {
+      case 2: // "Advanced Symptoms of Severe Deficiency" - NEW UNIQUE CONTENT
+        return generateAdvancedSymptomsSectionContent();
       case 4: // "Getting Tested and Understanding Your Results"
         return generateTestingAndResultsContent();
       case 6: // "Prevention and Lifestyle Strategies"
         return generatePreventionAndLifestyleContent();
-      case 7: // "Food Sources and Dietary Approaches"
-        return generateFoodSourcesContent();
-      case 8: // "Safe Sun Exposure Guidelines"
-        return generateSunExposureContent();
       default:
         return generateSectionSpecificContent(heading, primaryKeyword, semanticVariation, serpData, determineSectionType(heading), sectionIndex);
     }
@@ -286,53 +280,9 @@ Healthcare providers evaluate your results alongside:
 
 // Generate actual prevention and lifestyle content
 function generatePreventionAndLifestyleContent(): string {
-  return `### Building a Comprehensive Prevention Strategy
+  return `Prevention of vitamin D deficiency requires a comprehensive, multi-modal approach combining sunlight exposure, dietary strategies, and appropriate supplementation.
 
-Preventing vitamin D deficiency requires a multi-faceted approach combining sunlight exposure, dietary strategies, and targeted supplementation.
-
-**The Three-Pillar Approach:**
-1. **Strategic sun exposure** (when geographically and seasonally possible)
-2. **Vitamin D-rich foods and fortified products**
-3. **Evidence-based supplementation**
-
-### Lifestyle Modifications for Optimal Status
-
-**Seasonal Planning:**
-- **Summer months:** Maximize safe sun exposure and build vitamin D stores
-- **Winter months:** Rely primarily on food sources and supplements
-- **Year-round:** Maintain consistent supplementation especially above 37°N latitude
-
-**Geographic Considerations:**
-- **Northern climates (above 37°N):** Require year-round supplementation
-- **Sunny climates:** Still need attention to indoor lifestyle factors
-- **Urban environments:** May need higher supplementation due to air pollution blocking UVB
-
-### Creating Your Personal Prevention Plan
-
-**Step 1: Assess Your Risk Level**
-- Geographic location and seasonal variation
-- Skin pigmentation and tanning ability
-- Age and baseline health status
-- Lifestyle factors (indoor vs. outdoor work)
-
-**Step 2: Establish Baseline Testing**
-- Get 25(OH)D blood test during late winter/early spring
-- Identify your starting point and deficiency severity
-
-**Step 3: Implement Multi-Modal Strategy**
-- Combine safe sun exposure with dietary and supplement approaches
-- Adjust strategy based on seasonal changes
-- Monitor progress with follow-up testing
-
-**Step 4: Long-term Maintenance**
-- Develop sustainable daily habits
-- Adjust approach based on life changes (aging, moving, health changes)
-- Annual monitoring to ensure continued adequacy`;
-}
-
-// Generate actual food sources content
-function generateFoodSourcesContent(): string {
-  return `### Top Vitamin D Food Sources
+### Food Sources and Dietary Approaches
 
 While food alone rarely corrects deficiency, dietary sources provide important baseline support and work synergistically with supplements.
 
@@ -351,94 +301,74 @@ While food alone rarely corrects deficiency, dietary sources provide important b
 | Mushrooms (UV-exposed) | 1 cup | 400 IU | Maitake and portobello best |
 | Cod liver oil | 1 tablespoon | 1,360 IU | Very high but strong taste |
 
-### Optimizing Dietary Vitamin D
+### Safe Sun Exposure Guidelines
 
-**Food Preparation Tips:**
-- **Don't overcook fish:** Gentle cooking preserves vitamin D content
-- **Choose wild-caught fish:** Generally higher vitamin D than farmed
-- **Check fortification labels:** Look for vitamin D3 rather than D2
-- **Combine with healthy fats:** Enhances absorption of fat-soluble vitamin D
-
-**Realistic Expectations:**
-Even an excellent diet provides only 200-600 IU daily, while most adults need 1,000-4,000 IU daily for optimal levels. Food sources are important but insufficient alone for most people.
-
-### Meal Planning for Vitamin D
-
-**Weekly Goal:** Include fatty fish 2-3 times per week, use fortified milk/plant milk daily, and choose pasture-raised eggs when possible.
-
-**Sample High-Vitamin D Day:**
-- Breakfast: Fortified cereal with fortified milk (180 IU)
-- Lunch: Sardine salad (270 IU)  
-- Dinner: Grilled salmon with vegetables (500 IU)
-- **Daily total from food: ~950 IU**
-
-This excellent dietary day provides less than many people need for maintenance, demonstrating why supplementation is typically necessary.`;
-}
-
-// Generate actual sun exposure content
-function generateSunExposureContent(): string {
-  return `### Evidence-Based Sun Exposure Guidelines
-
-Safe sun exposure can contribute significantly to vitamin D production while minimizing skin cancer risk. The key is finding the right balance for your individual circumstances.
-
-### Factors Affecting Vitamin D Synthesis
-
-**Geographic and Seasonal Factors:**
-- **Latitude above 37°N:** Limited UVB during winter months (October-March)
-- **Time of day:** Maximum UVB between 10 AM - 3 PM
-- **Season:** Summer provides 3-5x more UVB than winter
-- **Altitude:** Higher altitudes increase UVB intensity
-
-**Individual Factors:**
-- **Skin type:** Fair skin produces vitamin D faster but burns easier
-- **Age:** Older adults produce 50% less vitamin D than young adults
-- **Body surface area:** More exposed skin = more vitamin D production
-
-### Practical Sun Exposure Recommendations
+Safe sun exposure can contribute significantly to vitamin D production while minimizing skin cancer risk.
 
 **Fair Skin (Types I-II):**
 - **Summer:** 10-15 minutes midday sun, 25% body exposed
 - **Spring/Fall:** 20-30 minutes midday sun
 - **Frequency:** 3-4 times per week
-- **Protection:** Start with short exposures, gradually increase
 
 **Medium Skin (Types III-IV):**
 - **Summer:** 15-25 minutes midday sun, 25% body exposed
 - **Spring/Fall:** 30-45 minutes midday sun
 - **Frequency:** 4-5 times per week
-- **Protection:** Can tolerate longer exposures
 
 **Dark Skin (Types V-VI):**
 - **Summer:** 30-60 minutes midday sun, 25% body exposed
 - **Year-round:** May need supplementation even with regular sun exposure
 - **Frequency:** Daily when possible during peak season
 
-### Maximizing Safe Sun Exposure
+### Supplementation Best Practices
 
-**Optimal Body Areas:**
-- **Arms and legs:** Large surface area, practical to expose
-- **Back and torso:** Maximum vitamin D production when practical
-- **Face:** Always protect with sunscreen to prevent premature aging
+**Choosing the Right Supplement:**
+- **Vitamin D3 (Cholecalciferol) vs. D2 (Ergocalciferol):** D3 is 87% more effective at raising blood levels and has a longer half-life. Choose D3 unless specifically prescribed D2.
+- **Quality Assurance:** Look for third-party testing seals (USP, NSF, or ConsumerLab) to ensure dosage accuracy and purity.
+- **Formulations:** 
+  - *Capsules/Tablets:* Most common, stable, easy to dose
+  - *Liquid Drops:* Better for children, customizable dosing
+  - *Sprays:* Convenient but may have variable absorption
 
-**Safety Guidelines:**
-- **Never burn:** Burning destroys vitamin D and increases cancer risk
-- **Gradual increase:** Build tolerance slowly over weeks
-- **Protect sensitive areas:** Face, neck, hands with sunscreen
-- **Timing matters:** Avoid peak intensity (11 AM - 2 PM) for extended periods
+**Optimal Timing and Absorption:**
+- **Take with Fat:** Vitamin D absorption increases by 50% when taken with a meal containing 10-15g of fat
+- **Consistency:** Take at the same time daily to maintain steady blood levels
+- **Cofactors:** Ensure adequate magnesium intake (300-400mg daily) as it's required for vitamin D activation
 
-### When Sun Exposure Isn't Enough
+**Dosing Strategy:**
+- **Maintenance (30+ ng/mL):** 1,000-2,000 IU daily
+- **Correction (20-30 ng/mL):** 2,000-4,000 IU daily for 8-12 weeks
+- **Severe Deficiency (<20 ng/mL):** Medical supervision recommended for doses >4,000 IU daily`;
+}
 
-**Geographic Limitations:**
-- **Northern latitudes:** Insufficient UVB for 4-6 months annually
-- **Urban environments:** Air pollution can block up to 50% of UVB
-- **Indoor lifestyle:** Most adults get insufficient incidental sun exposure
+// Generate actual advanced symptoms content
+function generateAdvancedSymptomsSectionContent(): string {
+  return `### Severe Deficiency Complications
 
-**Individual Limitations:**
-- **Skin cancer history:** May require sun avoidance
-- **Medications:** Some increase photosensitivity
-- **Work schedule:** Indoor work limits midday sun exposure opportunities
+When vitamin D deficiency progresses to severe levels (typically <10 ng/mL), the symptoms become more serious and can involve multiple organ systems.
 
-**Realistic Assessment:** While sun exposure is valuable, most adults in northern climates require supplementation for optimal year-round vitamin D status.`;
+**Musculoskeletal Complications:**
+- **Osteomalacia in Adults:** Severe bone pain, particularly in the ribs, spine, and pelvis. Unlike typical back pain, this is a deep, constant ache that worsens with movement.
+- **Severe Myopathy:** Proximal muscle weakness affecting shoulders and hips, making it difficult to climb stairs, rise from chairs, or lift arms overhead. 
+- **Increased Fracture Risk:** Bones become so weakened that minor falls or even normal activities can cause fractures.
+
+**Neurological and Psychiatric Manifestations:**
+- **Hypocalcemic Seizures:** When vitamin D deficiency leads to dangerously low calcium levels, seizures can occur.
+- **Severe Depression and Cognitive Impairment:** Beyond mild mood changes, severe deficiency can cause major depression and significant memory problems.
+- **Muscle Cramps and Tetany:** Painful muscle spasms, particularly in hands and feet, due to low calcium levels.
+
+**Cardiovascular and Immune Complications:**
+- **Severe Fatigue and Weakness:** Complete exhaustion that doesn't improve with rest, affecting all daily activities.
+- **Recurrent Serious Infections:** Pneumonia, severe respiratory infections, or other serious infections due to severely compromised immune function.
+- **Heart Rhythm Abnormalities:** Low calcium from severe vitamin D deficiency can affect heart rhythm.
+
+**Pediatric Manifestations (Rickets):**
+- **Bone Deformities:** Bowing of legs, enlarged wrists and ankles, dental problems.
+- **Growth Delays:** Stunted growth and delayed tooth eruption.
+- **Respiratory Issues:** Chest deformities affecting breathing.
+
+**When to Seek Emergency Care:**
+Seek immediate medical attention if you experience muscle spasms, seizures, difficulty breathing, or signs of severe bone pain that limits mobility. These may indicate dangerously low calcium levels requiring urgent treatment.`;
 }
 
 // Generate references with actual URLs
@@ -496,6 +426,33 @@ Whether you're just getting started or looking to optimize your current approach
 
 // Generate generic FAQs for non-medical topics  
 function generateGenericFAQs(primaryKeyword: string, serpData: any, targetAudience: string): string {
+  if (primaryKeyword.toLowerCase().includes('vitamin d deficiency')) {
+    return `### How accurate are at-home vitamin D tests compared to lab tests?
+
+At-home finger-prick tests have approximately 85-90% correlation with laboratory venous blood draws when performed correctly. However, they may be less reliable at very low or very high levels. For initial screening, they're adequate, but for medical decision-making, especially with levels below 20 ng/mL or above 80 ng/mL, laboratory confirmation is recommended.
+
+### Can I take too much vitamin D, and what are the warning signs?
+
+Vitamin D toxicity is rare but serious, typically occurring with sustained intake above 10,000 IU daily for months. Early signs include nausea, vomiting, weakness, and kidney problems. Blood levels above 100 ng/mL (250 nmol/L) indicate toxicity risk. This is why doses above 4,000 IU daily should be medically supervised.
+
+### Why isn't my vitamin D level improving despite taking supplements?
+
+Several factors can impair absorption: 1) Taking supplements without fat reduces absorption by 50%, 2) Magnesium deficiency prevents activation, 3) Genetic variations may require higher doses, 4) GI issues reduce absorption, 5) Certain medications interfere with metabolism. If levels don't improve after 8-12 weeks, medical evaluation is warranted.
+
+### What's the difference between Vitamin D2 and D3?
+
+Vitamin D3 (cholecalciferol) is significantly more effective than D2 (ergocalciferol) at raising blood levels. Studies show D3 is approximately 87% more potent and has a longer half-life. While D2 can correct deficiency, D3 requires lower doses and provides more stable blood levels.
+
+### What are the symptoms of taking too much vitamin D?
+
+Vitamin D toxicity symptoms include nausea, vomiting, weakness, kidney problems, confusion, and heart rhythm abnormalities. These occur due to excessive calcium absorption causing hypercalcemia. Symptoms typically appear with blood levels above 100 ng/mL and sustained high-dose supplementation (>10,000 IU daily for months).
+
+### Does vitamin D interact with any medications?
+
+Yes, several medications can affect vitamin D metabolism: Corticosteroids increase breakdown, anticonvulsants induce metabolizing enzymes, thiazide diuretics may cause dangerous calcium elevation when combined with vitamin D, and some cholesterol medications can reduce absorption. Always inform your healthcare provider about vitamin D supplementation.`;
+  }
+  
+  // ... keep existing code for non-vitamin D topics
   return `### What is the most important thing to know about ${primaryKeyword}?
 
 The most critical aspect is understanding the evidence-based approaches that consistently deliver results. Focus on proven strategies rather than following trends or unsubstantiated claims.
